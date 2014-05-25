@@ -91,7 +91,9 @@ function init()
     var seed = floor(Math.random() * MAX_INT);
     if (debug) console.log(seed);
 
-    terrain = new Terrain(nPolygons, seed);
+    var pointGenerator = new PointGenerator(PointSamplingMethod.Uniform, seed);
+
+    terrain = new Terrain(nPolygons, pointGenerator, seed);
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 

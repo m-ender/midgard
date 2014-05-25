@@ -1,7 +1,7 @@
 // n is the number of samples and hence polygons to use
 // If seed is provided, a seed random number generator is used,
 // otherwise defaults to Math.random().
-function Terrain(n, seed)
+function Terrain(n, pointGenerator, seed)
 {
     this.n = n;
 
@@ -10,30 +10,32 @@ function Terrain(n, seed)
     else
         this.rand = Math.random;
 
+    this.pointGenerator = pointGenerator;
+
     this.generatePoints();
 }
 
 Terrain.prototype.generatePoints = function() {
     var i;
 
-    this.points = [];
+    this.points = this.pointGenerator.get(this.n);
+    // Update n, because generator may return a different number
+    this.n = this.points.length;
+
+    if (debug) console.log('Actual number of polygons: ' + this.n);
+
+    this.markers = [];
 
     for(i = 0; i < this.n; ++i)
     {
-        var x = 2*this.rand() - 1;
-        var y = 2*this.rand() - 1;
-
-        this.points.push({
-            x: x,
-            y: y,
-            geometry: new Circle(x, y, 'black', markerRadius)
-        });
+        var p = this.points[i];
+        this.markers.push(new Circle(p.x, p.y, 'black', markerRadius));
     }
 };
 
 Terrain.prototype.render = function() {
     var i;
 
-    for (i = 0; i < this.points.length; ++i)
-        this.points[i].geometry.render();
+    for (i = 0; i < this.markers.length; ++i)
+        this.markers[i].render();
 };
