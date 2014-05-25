@@ -4,7 +4,9 @@
 var PointSamplingMethod = {
     Uniform: 'Uniform',
     SquareGrid: 'SquareGrid',
+    PerturbedSquareGrid: 'PerturbedSquareGrid',
     HexagonalGrid: 'HexagonalGrid',
+    PerturbedHexagonalGrid: 'PerturbedHexagonalGrid',
 };
 
 // seed is used by the PRNG-based methods and ignored otherwise.
@@ -23,6 +25,8 @@ function PointGenerator(method, seed) {
 // on fixed grids, the actual number of points may deviate slightly.
 PointGenerator.prototype.generate = function(n) {
     var i, j;
+    var nPerSide, dCell;
+    var nHoriz, nVert, dHoriz, dVert;
 
     this.n = n;
     this.points = [];
@@ -44,8 +48,8 @@ PointGenerator.prototype.generate = function(n) {
     // Divide the [-1,1] range into roughly n square cells and
     // put one point at the centre of each cell.
     case PointSamplingMethod.SquareGrid:
-        var nPerSide = round(sqrt(n));
-        var dCell = 2 / nPerSide;
+        nPerSide = round(sqrt(n));
+        dCell = 2 / nPerSide;
         for (i = 0; i < nPerSide; ++i)
         {
             for (j = 0; j < nPerSide; ++j)
@@ -58,13 +62,30 @@ PointGenerator.prototype.generate = function(n) {
         }
         break;
 
+    // Places the points on a square grid as above, but perturbs each
+    // point uniformly within its cell.
+    case PointSamplingMethod.PerturbedSquareGrid:
+        nPerSide = round(sqrt(n));
+        dCell = 2 / nPerSide;
+        for (i = 0; i < nPerSide; ++i)
+        {
+            for (j = 0; j < nPerSide; ++j)
+            {
+                this.points.push({
+                    x: -1 + i*dCell + this.rand() * dCell,
+                    y: -1 + j*dCell + this.rand() * dCell
+                });
+            }
+        }
+        break;
+
     // Divide the [-1,1] range into roughly n hexagonal cells and
     // put one point at the centre of each cell.
     case PointSamplingMethod.HexagonalGrid:
-        var nHoriz = round(sqrt(sqrt(3)/2*n));
-        var nVert = round(2/sqrt(3) * nHoriz);
-        var dHoriz = 2 / (nHoriz + 0.5);
-        var dVert = sqrt(3)/2 * dHoriz;
+        nHoriz = round(sqrt(sqrt(3)/2*n));
+        nVert = round(2/sqrt(3) * nHoriz);
+        dHoriz = 2 / (nHoriz + 0.5);
+        dVert = sqrt(3)/2 * dHoriz;
 
         for (j = 0; j < nVert; ++j)
         {
@@ -73,6 +94,26 @@ PointGenerator.prototype.generate = function(n) {
                 this.points.push({
                     x: -1 + dHoriz*(1 + j % 2)/2 + i*dHoriz,
                     y: 1 - dVert/2 - j*dVert
+                });
+            }
+        }
+        break;
+
+    // Places the points on a hexagonal grid as above, but perturbs each
+    // point uniformly within the rectangle enclosing its cell.
+    case PointSamplingMethod.PerturbedHexagonalGrid:
+        nHoriz = round(sqrt(sqrt(3)/2*n));
+        nVert = round(2/sqrt(3) * nHoriz);
+        dHoriz = 2 / (nHoriz + 0.5);
+        dVert = sqrt(3)/2 * dHoriz;
+
+        for (j = 0; j < nVert; ++j)
+        {
+            for (i = 0; i < nHoriz; ++i)
+            {
+                this.points.push({
+                    x: -1 + dHoriz*(j % 2)/2 + i*dHoriz + this.rand() * dHoriz,
+                    y: 1 - j*dVert - this.rand() * dVert
                 });
             }
         }

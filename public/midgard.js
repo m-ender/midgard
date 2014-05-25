@@ -91,7 +91,7 @@ function init()
     var seed = floor(Math.random() * MAX_INT);
     if (debug) console.log(seed);
 
-    var pointGenerator = new PointGenerator(PointSamplingMethod.HexagonalGrid, seed);
+    var pointGenerator = new PointGenerator(PointSamplingMethod.PerturbedSquareGrid, seed);
 
     terrain = new Terrain(nPolygons, pointGenerator, seed);
 
