@@ -1,0 +1,15 @@
+{
+  "name": "midgard",
+  "description": "Polygon-based terrain generator",
+  "author": "Martin Büttner",
+  "version": "0.0.1",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mbuettner/midgard.git"
+  },
+  "dependencies": {
+    "express": "3.3.1"
+  },
+  "engine": "node 0.8.14"
+}
