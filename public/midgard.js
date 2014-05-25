@@ -24,6 +24,8 @@ var angle = 0;
 var circles = [];
 var polygons = [];
 
+var terrain;
+
 window.onload = init;
 
 function init()
@@ -86,22 +88,10 @@ function init()
 
     prepareCircles();
 
-    circles.push(new Circle(0, 0, 'black', markerRadius));
+    var seed = floor(Math.random() * MAX_INT);
+    if (debug) console.log(seed);
 
-    polygons.push(new ConvexPolygon([
-        {x:0.1,y:0},
-        {x:0,y:0.1},
-        {x:-0.1,y:0},
-        {x:0,y:-0.1}
-    ], colorGenerator.next()));
-
-    polygons.push(new ConvexPolygon([
-        {x:0.2,y:0},
-        {x:0.3,y:0.1},
-        {x:0.15,y:0.2},
-        {x:0.1,y:0.15},
-        {x:0.15,y:0.05}
-    ], colorGenerator.next()));
+    terrain = new Terrain(nPolygons, seed);
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -215,8 +205,13 @@ function drawScreen()
     gl.useProgram(midgardProgram.program);
     gl.uniform1f(midgardProgram.uGridAngle, 0);
 
+    terrain.render();
+
     for (i = 0; i < polygons.length; ++i)
+    {
         polygons[i].render();
+        polygons[i].render(true);
+    }
 
     for (i = 0; i < circles.length; ++i)
         circles[i].render();

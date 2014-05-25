@@ -20,3 +20,6 @@ var min = Math.min;
 function sign(x) {
     return x ? (x < 0 ? -1 : 1) : 0;
 }
+
+var MAX_INT = 9007199254740992;
+var MIN_INT = -9007199254740992;

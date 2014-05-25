@@ -2,7 +2,9 @@
 // the coordinate range [-1, 1].
 // The scaling is done in the shaders, but is has to be taking into account
 // in obtaining coordinates from the mouse position.
-var renderScale = 1;
+var renderScale = 0.9;
 var maxCoord = 1/renderScale;
 
 var markerRadius = 0.01;
+
+var nPolygons = 256;
