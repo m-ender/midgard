@@ -54,4 +54,4 @@ ColorGenerator.prototype.correctHue = function(hue) {
 };
 
 
-var colorGenerator = new ColorGenerator(nColors);
+var colorGenerator = new ColorGenerator();

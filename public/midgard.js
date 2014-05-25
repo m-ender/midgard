@@ -21,6 +21,8 @@ var lastTime;
 // Rotation of the entire map
 var angle = 0;
 
+var circles = [];
+
 window.onload = init;
 
 function init()
@@ -81,7 +83,9 @@ function init()
 
     gl.useProgram(null);
 
-    //prepareCircles();
+    prepareCircles();
+
+    circles.push(new Circle(0, 0, 'black', markerRadius));
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -193,7 +197,9 @@ function drawScreen()
     gl.useProgram(midgardProgram.program);
     gl.uniform1f(midgardProgram.uGridAngle, 0);
 
-    /* Render geometry here */
+    circles.forEach(function(c) {
+        c.render();
+    });
 
     gl.useProgram(null);
 
