@@ -5,6 +5,6 @@
 var renderScale = 0.9;
 var maxCoord = 1/renderScale;
 
-var markerRadius = 0.01;
+var markerRadius = 0.007;
 
 var nPolygons = 256;

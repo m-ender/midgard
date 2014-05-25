@@ -9,7 +9,7 @@ var gl;
 // Objects holding data for individual shader programs
 var midgardProgram = {};
 
-var resolution = 512; // We're assuming a square aspect ratio
+var resolution = 1024; // We're assuming a square aspect ratio
 var viewPort = {};
 
 // Timing
