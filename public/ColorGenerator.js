@@ -23,7 +23,7 @@ function ColorGenerator(baseColor) {
     ];
 }
 
-ColorGenerator.prototype.nextColor = function(correctHue) {
+ColorGenerator.prototype.next = function(correctHue) {
     var hue = this.baseColor.hue() + this.phi * this.i++;
     if(correctHue)
         return this.baseColor.hue(this.correctHue(hue));

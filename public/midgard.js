@@ -22,6 +22,7 @@ var lastTime;
 var angle = 0;
 
 var circles = [];
+var polygons = [];
 
 window.onload = init;
 
@@ -86,6 +87,21 @@ function init()
     prepareCircles();
 
     circles.push(new Circle(0, 0, 'black', markerRadius));
+
+    polygons.push(new ConvexPolygon([
+        {x:0.1,y:0},
+        {x:0,y:0.1},
+        {x:-0.1,y:0},
+        {x:0,y:-0.1}
+    ], colorGenerator.next()));
+
+    polygons.push(new ConvexPolygon([
+        {x:0.2,y:0},
+        {x:0.3,y:0.1},
+        {x:0.15,y:0.2},
+        {x:0.1,y:0.15},
+        {x:0.15,y:0.05}
+    ], colorGenerator.next()));
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -189,6 +205,8 @@ function update()
 
 function drawScreen()
 {
+    var i;
+
     gl.enable(gl.BLEND);
 
     gl.viewport(0, 0, viewPort.width, viewPort.height);
@@ -197,9 +215,11 @@ function drawScreen()
     gl.useProgram(midgardProgram.program);
     gl.uniform1f(midgardProgram.uGridAngle, 0);
 
-    circles.forEach(function(c) {
-        c.render();
-    });
+    for (i = 0; i < polygons.length; ++i)
+        polygons[i].render();
+
+    for (i = 0; i < circles.length; ++i)
+        circles[i].render();
 
     gl.useProgram(null);
 
