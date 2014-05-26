@@ -1,0 +1,73 @@
+// This actually renders a quad to support thicker lines
+
+// The first two parameters are two points designating the start
+// and end of the line. Supply each point as an object with
+// properties 'x' and 'y'.
+// The color is optional (default black).
+// thickness is optional (default is pixelSize)
+function Line(a, b, color, thickness)
+{
+    this.hidden = false;
+
+    this.a = a;
+    this.b = b;
+
+    this.color = color || 'black';
+
+    this.thickness = thickness || pixelSize;
+
+    if (!(this.color instanceof jQuery.Color))
+        this.color = jQuery.Color(this.color);
+
+    // Set up vertices
+
+    // Get vector normal to the direction from a to b
+    var dx = a.y - b.y;
+    var dy = b.x - a.x;
+    var d = sqrt(dx*dx + dy*dy);
+    // Normalise and scale to half the thickness
+    dx = dx/d * this.thickness/2;
+    dy = dy/d * this.thickness/2;
+
+    // Now set up vertices of a counter-clockwise quad
+    var vertexCoords = [
+        a.x - dx, a.y - dy,
+        b.x - dx, b.y - dy,
+        b.x + dx, b.y + dy,
+        a.x + dx, a.y + dy
+    ];
+
+    this.vertices = {};
+    this.vertices.data = new Float32Array(vertexCoords);
+
+    this.vertices.bufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices.bufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertices.data, gl.STATIC_DRAW);
+}
+
+Line.prototype.hide = function() { this.hidden = true; };
+Line.prototype.show = function() { this.hidden = false; };
+
+Line.prototype.render = function() {
+    if (this.hidden) return;
+
+    gl.useProgram(midgardProgram.program);
+
+    gl.uniform2f(midgardProgram.uCenter, 0, 0);
+    gl.uniform1f(midgardProgram.uScale, 1);
+    gl.uniform1f(midgardProgram.uAngle, 0);
+
+    gl.enableVertexAttribArray(midgardProgram.aPos);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices.bufferId);
+    gl.vertexAttribPointer(midgardProgram.aPos, 2, gl.FLOAT, false, 0, 0);
+
+    gl.uniform4f(midgardProgram.uColor,
+                 this.color.red()/255,
+                 this.color.green()/255,
+                 this.color.blue()/255,
+                 1);
+
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
+    gl.disableVertexAttribArray(midgardProgram.aPos);
+};

@@ -9,8 +9,6 @@ var gl;
 
 // Objects holding data for individual shader programs
 var midgardProgram = {};
-
-var resolution = 1024; // We're assuming a square aspect ratio
 var viewPort = {};
 
 // Timing
@@ -24,6 +22,7 @@ var angle = 0;
 
 var circles = [];
 var polygons = [];
+var lines = [];
 
 var configuration = {
     seed: 0,
@@ -251,6 +250,9 @@ function drawScreen()
         polygons[i].render();
         polygons[i].render(true);
     }
+
+    for (i = 0; i < lines.length; ++i)
+        lines[i].render();
 
     for (i = 0; i < circles.length; ++i)
         circles[i].render();
