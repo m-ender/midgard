@@ -21,6 +21,7 @@ function Terrain(n, pointGenerator, seed)
     console.log(this.voronoiData);
 
     this.generateVoronoiGraphics();
+    this.generateDelaunayGraphics();
 }
 
 Terrain.prototype.generatePoints = function() {
@@ -75,6 +76,24 @@ Terrain.prototype.generateVoronoiGraphics = function() {
     }
 };
 
+Terrain.prototype.generateDelaunayGraphics = function() {
+    var i;
+
+    this.delaunayLines = [];
+
+    for (i = 0; i < this.voronoiData.edges.length; ++i)
+    {
+        var edge = this.voronoiData.edges[i];
+        if (edge.lSite && edge.rSite)
+            this.delaunayLines.push(new Line(
+                edge.lSite,
+                edge.rSite,
+                'white',
+                lineThickness
+            ));
+    }
+};
+
 Terrain.prototype.render = function() {
     var i;
 
@@ -82,6 +101,9 @@ Terrain.prototype.render = function() {
         this.polygons[i].render();
     for (i = 0; i < this.polygons.length; ++i)
         this.polygons[i].render(true);
+
+    for (i = 0; i < this.delaunayLines.length; ++i)
+        this.delaunayLines[i].render();
 
     for (i = 0; i < this.markers.length; ++i)
         this.markers[i].render();
