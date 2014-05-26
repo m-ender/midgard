@@ -148,7 +148,6 @@ function generateNewSeed()
 
 function generateNewTerrain()
 {
-    console.log(configuration.seed);
     var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, configuration.seed);
 
     terrain = new Terrain(nPolygons, pointGenerator, configuration.seed);
