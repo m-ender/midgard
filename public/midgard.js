@@ -26,6 +26,7 @@ var circles = [];
 var polygons = [];
 
 var configuration = {
+    seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
 };
 
@@ -93,6 +94,7 @@ function init()
 
     prepareCircles();
 
+    generateNewSeed();
     generateNewTerrain();
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -111,7 +113,9 @@ function renderInstructions()
 
 function renderMenu()
 {
-    optionsBox.html('<a id="newTerrain">Regenerate Terrain</a><br><br>' +
+    optionsBox.html('Seed: <input id="seed" type="text" value="" /> ' +
+                    '<a id="newSeed">random</a><br>' +
+                    '<a id="newTerrain">Regenerate Terrain</a><br><br>' +
                     'Point sampling method:<br>' +
                     '<select id="pointSamplingMethod"></select>');
 
@@ -125,6 +129,10 @@ function renderMenu()
             );
     }
 
+    optionsBox.find('#seed').bind('change', function(e) {
+        configuration.seed = +e.target.value;
+    });
+    optionsBox.find('#newSeed').bind('click', generateNewSeed);
     optionsBox.find('#newTerrain').bind('click', generateNewTerrain);
     optionsBox.find('#pointSamplingMethod').bind('change', function(e){
         configuration.pointSamplingMethod = e.target.value;
@@ -132,14 +140,18 @@ function renderMenu()
     });
 }
 
+function generateNewSeed()
+{
+    configuration.seed = floor(Math.random() * MAX_INT);
+    optionsBox.find('#seed').val(configuration.seed);
+}
+
 function generateNewTerrain()
 {
-    var seed = floor(Math.random() * MAX_INT);
-    if (debug) console.log(seed);
+    console.log(configuration.seed);
+    var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, configuration.seed);
 
-    var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, seed);
-
-    terrain = new Terrain(nPolygons, pointGenerator, seed);
+    terrain = new Terrain(nPolygons, pointGenerator, configuration.seed);
 }
 
 function InitShaders(gl, vertexShaderId, fragmentShaderId)
