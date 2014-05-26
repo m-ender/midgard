@@ -35,7 +35,7 @@ body {
     display: block;
 }
 
-#message{
+#menu{
     padding: 5px;
     background: rgb(48, 41, 17);
     color: white;
@@ -48,11 +48,11 @@ body {
     overflow-y: auto;
 }
 
-#message .active, #message .active:hover {
+#menu .active, #menu .active:hover {
     color: green;
 }
 
-#message a:hover {
+#menu a:hover {
     color: gray;
 }
 

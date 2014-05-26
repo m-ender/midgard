@@ -2,6 +2,7 @@ var debug = true;
 
 var canvas;
 var messageBox;
+var optionsBox;
 var debugBox;
 
 var gl;
@@ -23,6 +24,10 @@ var angle = 0;
 
 var circles = [];
 var polygons = [];
+
+var configuration = {
+    pointSamplingMethod: PointSamplingMethod.Uniform,
+};
 
 var terrain;
 
@@ -50,6 +55,7 @@ function init()
     document.addEventListener('keypress', handleCharacterInput, false);
 
     messageBox = $('#message');
+    optionsBox = $('#options');
     debugBox = $('#debug');
 
     if (!debug)
@@ -62,8 +68,7 @@ function init()
         messageBox.html("WebGL up and running!");
     }
 
-    if (!debug)
-        renderMenu();
+    renderMenu();
 
     gl.clearColor(1, 1, 1, 1);
 
@@ -88,12 +93,7 @@ function init()
 
     prepareCircles();
 
-    var seed = floor(Math.random() * MAX_INT);
-    if (debug) console.log(seed);
-
-    var pointGenerator = new PointGenerator(PointSamplingMethod.PerturbedSquareGrid, seed);
-
-    terrain = new Terrain(nPolygons, pointGenerator, seed);
+    generateNewTerrain();
 
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -111,9 +111,35 @@ function renderInstructions()
 
 function renderMenu()
 {
-    //messageBox.html('<a id="startNewLevel">Start new level</a>');
+    optionsBox.html('<a id="newTerrain">Regenerate Terrain</a><br><br>' +
+                    'Point sampling method:<br>' +
+                    '<select id="pointSamplingMethod"></select>');
 
-    //messageBox.find('#startNewLevel').bind('click', initializeLevel);
+    for (var method in PointSamplingMethod)
+    {
+        if (PointSamplingMethod.hasOwnProperty(method))
+            optionsBox.find('#pointSamplingMethod').append(
+                '<option value="' + method + '">' +
+                method.replace(/(?!^)(?=[A-Z])/g, ' ') +
+                '</option>'
+            );
+    }
+
+    optionsBox.find('#newTerrain').bind('click', generateNewTerrain);
+    optionsBox.find('#pointSamplingMethod').bind('change', function(e){
+        configuration.pointSamplingMethod = e.target.value;
+        generateNewTerrain();
+    });
+}
+
+function generateNewTerrain()
+{
+    var seed = floor(Math.random() * MAX_INT);
+    if (debug) console.log(seed);
+
+    var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, seed);
+
+    terrain = new Terrain(nPolygons, pointGenerator, seed);
 }
 
 function InitShaders(gl, vertexShaderId, fragmentShaderId)
