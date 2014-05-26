@@ -80,6 +80,8 @@ Terrain.prototype.render = function() {
 
     for (i = 0; i < this.polygons.length; ++i)
         this.polygons[i].render();
+    for (i = 0; i < this.polygons.length; ++i)
+        this.polygons[i].render(true);
 
     for (i = 0; i < this.markers.length; ++i)
         this.markers[i].render();
