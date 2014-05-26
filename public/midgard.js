@@ -27,6 +27,10 @@ var lines = [];
 var configuration = {
     seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
+    renderVoronoiCells: true,
+    renderVoronoiEdges: true,
+    renderDelaunayEdges: false,
+    renderPointMarkers: true,
 };
 
 var terrain;
@@ -115,8 +119,19 @@ function renderMenu()
     optionsBox.html('Seed: <input id="seed" type="text" value="" /> ' +
                     '<a id="newSeed">random</a><br>' +
                     '<a id="newTerrain">Regenerate Terrain</a><br><br>' +
+
                     'Point sampling method:<br>' +
-                    '<select id="pointSamplingMethod"></select>');
+                    '<select id="pointSamplingMethod"></select><br><br>' +
+
+                    'Show:<br>' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderVoronoiCells" checked> ' +
+                    '<label for="renderVoronoiCells">Voronoi cells</label></a><br>' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderVoronoiEdges" checked> ' +
+                    '<label for="renderVoronoiEdges">Voronoi cell boundaries</label></a><br>' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderDelaunayEdges"> ' +
+                    '<label for="renderDelaunayEdges">Delaunay triangulation</label></a><br>' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderPointMarkers" checked> ' +
+                    '<label for="renderPointMarkers">Sampled points</label></a>');
 
     for (var method in PointSamplingMethod)
     {
@@ -137,6 +152,8 @@ function renderMenu()
         configuration.pointSamplingMethod = e.target.value;
         generateNewTerrain();
     });
+
+    optionsBox.find('.renderSwitch').bind('change', setRenderSwitches);
 }
 
 function generateNewSeed()
@@ -149,7 +166,15 @@ function generateNewTerrain()
 {
     var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, configuration.seed);
 
-    terrain = new Terrain(nPolygons, pointGenerator, configuration.seed);
+    terrain = new Terrain(nPolygons, pointGenerator, configuration);
+}
+
+function setRenderSwitches()
+{
+    configuration.renderVoronoiCells = optionsBox.find('#renderVoronoiCells')[0].checked;
+    configuration.renderVoronoiEdges = optionsBox.find('#renderVoronoiEdges')[0].checked;
+    configuration.renderDelaunayEdges = optionsBox.find('#renderDelaunayEdges')[0].checked;
+    configuration.renderPointMarkers = optionsBox.find('#renderPointMarkers')[0].checked;
 }
 
 function InitShaders(gl, vertexShaderId, fragmentShaderId)

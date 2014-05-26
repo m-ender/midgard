@@ -1,14 +1,11 @@
 // n is the number of samples and hence polygons to use
-// If seed is provided, a seed random number generator is used,
-// otherwise defaults to Math.random().
-function Terrain(n, pointGenerator, seed)
+function Terrain(n, pointGenerator, configuration)
 {
     this.n = n;
 
-    if (seed)
-        this.rand = new Math.seedrandom(seed);
-    else
-        this.rand = Math.random;
+    this.configuration = configuration;
+
+    this.rand = new Math.seedrandom(configuration.seed);
 
     this.pointGenerator = pointGenerator;
 
@@ -97,14 +94,20 @@ Terrain.prototype.generateDelaunayGraphics = function() {
 Terrain.prototype.render = function() {
     var i;
 
-    for (i = 0; i < this.polygons.length; ++i)
-        this.polygons[i].render();
-    for (i = 0; i < this.polygons.length; ++i)
-        this.polygons[i].render(true);
+    if (this.configuration.renderVoronoiCells)
+        for (i = 0; i < this.polygons.length; ++i)
+            this.polygons[i].render();
+    if (this.configuration.renderVoronoiEdges)
+        for (i = 0; i < this.polygons.length; ++i)
+            this.polygons[i].render(true);
 
-    for (i = 0; i < this.delaunayLines.length; ++i)
-        this.delaunayLines[i].render();
+    if (this.configuration.renderDelaunayEdges)
+        for (i = 0; i < this.delaunayLines.length; ++i)
+            this.delaunayLines[i].render(
+                this.configuration.renderVoronoiCells ? 'white' : 'black'
+            );
 
-    for (i = 0; i < this.markers.length; ++i)
-        this.markers[i].render();
+    if (this.configuration.renderPointMarkers)
+        for (i = 0; i < this.markers.length; ++i)
+            this.markers[i].render();
 };

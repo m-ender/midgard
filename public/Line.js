@@ -48,8 +48,15 @@ function Line(a, b, color, thickness)
 Line.prototype.hide = function() { this.hidden = true; };
 Line.prototype.show = function() { this.hidden = false; };
 
-Line.prototype.render = function() {
+// You may provide another color to override the one this
+// line was created with.
+Line.prototype.render = function(color) {
     if (this.hidden) return;
+
+    color = color || this.color;
+
+    if (!(color instanceof jQuery.Color))
+        color = jQuery.Color(color);
 
     gl.useProgram(midgardProgram.program);
 
@@ -62,9 +69,9 @@ Line.prototype.render = function() {
     gl.vertexAttribPointer(midgardProgram.aPos, 2, gl.FLOAT, false, 0, 0);
 
     gl.uniform4f(midgardProgram.uColor,
-                 this.color.red()/255,
-                 this.color.green()/255,
-                 this.color.blue()/255,
+                 color.red()/255,
+                 color.green()/255,
+                 color.blue()/255,
                  1);
 
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
