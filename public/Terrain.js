@@ -12,7 +12,15 @@ function Terrain(n, pointGenerator, seed)
 
     this.pointGenerator = pointGenerator;
 
+    this.voronoi = new Voronoi();
+
     this.generatePoints();
+
+    this.generateVoronoiData();
+
+    console.log(this.voronoiData);
+
+    this.generateVoronoiGraphics();
 }
 
 Terrain.prototype.generatePoints = function() {
@@ -33,8 +41,45 @@ Terrain.prototype.generatePoints = function() {
     }
 };
 
+Terrain.prototype.generateVoronoiData = function() {
+    // The Voronoi library uses an origin in the upper-left corner.
+    // This means we need to flip the sign of the y-boundaries, and
+    // half-edges will rotate clockwise.
+    var boundingBox = {
+        xl: -1, xr: 1,
+        yt: -1, yb: 1
+    };
+
+    this.voronoiData = this.voronoi.compute(this.points, boundingBox);
+};
+
+Terrain.prototype.generateVoronoiGraphics = function() {
+    var i, j;
+
+    this.polygons = [];
+
+    for (i = 0; i < this.voronoiData.cells.length; ++i)
+    {
+        var halfedges = this.voronoiData.cells[i].halfedges;
+        var points = [];
+        for (j = halfedges.length - 1; j >= 0; --j)
+        {
+            var edge = halfedges[j].edge;
+            if (edge.rSite && edge.rSite.voronoiId === i)
+                points.push(edge.va);
+            else
+                points.push(edge.vb);
+        }
+
+        this.polygons.push(new ConvexPolygon(points, colorGenerator.next()));
+    }
+};
+
 Terrain.prototype.render = function() {
     var i;
+
+    for (i = 0; i < this.polygons.length; ++i)
+        this.polygons[i].render();
 
     for (i = 0; i < this.markers.length; ++i)
         this.markers[i].render();
