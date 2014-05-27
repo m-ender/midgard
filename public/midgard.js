@@ -28,6 +28,7 @@ var configuration = {
     nPolygons: 256,
     seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
+    relaxationPasses: 1,
     renderVoronoiCells: true,
     renderVoronoiEdges: true,
     renderDelaunayEdges: false,
@@ -119,6 +120,8 @@ function renderMenu()
 {
     optionsBox.html('Number of polygons ≈ ' +
                     '<input id="nPolygons" type="text" value="' + configuration.nPolygons + '" /><br>' +
+                    'Relaxation passes: ' +
+                    '<input id="relaxationPasses" type="text" value="' + configuration.relaxationPasses + '" /><br>' +
                     'Seed: <input id="seed" type="text" value="" /> ' +
                     '<a id="newSeed">random</a><br>' +
                     '<a id="newTerrain">Regenerate Terrain</a><br><br>' +
@@ -148,6 +151,9 @@ function renderMenu()
 
     optionsBox.find('#nPolygons').bind('change', function(e) {
         configuration.nPolygons = +e.target.value;
+    });
+    optionsBox.find('#relaxationPasses').bind('change', function(e) {
+        configuration.relaxationPasses = +e.target.value;
     });
     optionsBox.find('#seed').bind('change', function(e) {
         configuration.seed = +e.target.value;

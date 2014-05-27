@@ -60,6 +60,10 @@ body {
     width: 45px;
 }
 
+#relaxationPasses {
+    width: 25px;
+}
+
 #seed {
     width: 113px;
     text-align: right;
