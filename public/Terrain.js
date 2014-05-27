@@ -1,5 +1,4 @@
-// n is the number of samples and hence polygons to use
-function Terrain(n, pointGenerator, configuration)
+function Terrain(configuration, pointGenerator)
 {
     // This bounding box is for the Voronoi library, which uses an
     // origin in the upper-left corner.
@@ -10,7 +9,7 @@ function Terrain(n, pointGenerator, configuration)
         yt: -1, yb: 1
     };
 
-    this.n = n;
+    this.n = configuration.nPolygons;
 
     this.configuration = configuration;
 

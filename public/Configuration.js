@@ -15,5 +15,3 @@ var pixelSize = 2*maxCoord/resolution;
 
 var markerRadius = 3*pixelSize;
 var lineThickness = 3*pixelSize;
-
-var nPolygons = 256;

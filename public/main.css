@@ -56,6 +56,10 @@ body {
     color: gray;
 }
 
+#nPolygons {
+    width: 45px;
+}
+
 #seed {
     width: 113px;
     text-align: right;

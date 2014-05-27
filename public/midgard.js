@@ -25,6 +25,7 @@ var polygons = [];
 var lines = [];
 
 var configuration = {
+    nPolygons: 256,
     seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
     renderVoronoiCells: true,
@@ -116,7 +117,9 @@ function renderInstructions()
 
 function renderMenu()
 {
-    optionsBox.html('Seed: <input id="seed" type="text" value="" /> ' +
+    optionsBox.html('Number of polygons ≈ ' +
+                    '<input id="nPolygons" type="text" value="' + configuration.nPolygons + '" /><br>' +
+                    'Seed: <input id="seed" type="text" value="" /> ' +
                     '<a id="newSeed">random</a><br>' +
                     '<a id="newTerrain">Regenerate Terrain</a><br><br>' +
 
@@ -143,6 +146,9 @@ function renderMenu()
             );
     }
 
+    optionsBox.find('#nPolygons').bind('change', function(e) {
+        configuration.nPolygons = +e.target.value;
+    });
     optionsBox.find('#seed').bind('change', function(e) {
         configuration.seed = +e.target.value;
     });
@@ -166,7 +172,7 @@ function generateNewTerrain()
 {
     var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, configuration.seed);
 
-    terrain = new Terrain(nPolygons, pointGenerator, configuration);
+    terrain = new Terrain(configuration, pointGenerator);
 }
 
 function setRenderSwitches()
