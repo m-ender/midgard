@@ -10,12 +10,8 @@ var PointSamplingMethod = {
 };
 
 // seed is used by the PRNG-based methods and ignored otherwise.
-// If no seed is given, defaults to Math.random().
 function PointGenerator(method, seed) {
-    if (seed)
-        this.rand = new Math.seedrandom(seed);
-    else
-        this.rand = Math.random;
+    this.rand = new Math.seedrandom(seed);
 
     this.method = method;
 }

@@ -170,6 +170,8 @@ function generateNewSeed()
 
 function generateNewTerrain()
 {
+    if (terrain) terrain.destroy();
+
     var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, configuration.seed);
 
     terrain = new Terrain(configuration, pointGenerator);

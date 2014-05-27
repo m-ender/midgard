@@ -69,3 +69,9 @@ ConvexPolygon.prototype.render = function(outline) {
 
     gl.disableVertexAttribArray(midgardProgram.aPos);
 };
+
+// "Destructor" - this has to be called manually
+ConvexPolygon.prototype.destroy = function() {
+    gl.deleteBuffer(this.vertices.bufferId);
+    delete this.vertices;
+};

@@ -69,7 +69,7 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                 points.push(edge.vb);
         }
 
-        this.polygons.push(new ConvexPolygon(points, colorGenerator.next()));
+        this.polygons.push(new ConvexPolygon(points, colorGenerator.next(true)));
     }
 
     this.voronoiLines = [];
@@ -122,4 +122,20 @@ Terrain.prototype.render = function() {
     if (this.configuration.renderPointMarkers)
         for (i = 0; i < this.markers.length; ++i)
             this.markers[i].render();
+};
+
+Terrain.prototype.destroy = function() {
+    var i;
+
+    if (this.configuration.renderVoronoiCells)
+        for (i = 0; i < this.polygons.length; ++i)
+            this.polygons[i].destroy();
+
+    if (this.configuration.renderVoronoiEdges)
+        for (i = 0; i < this.voronoiLines.length; ++i)
+            this.voronoiLines[i].destroy();
+
+    if (this.configuration.renderDelaunayEdges)
+        for (i = 0; i < this.delaunayLines.length; ++i)
+            this.delaunayLines[i].destroy();
 };

@@ -78,3 +78,9 @@ Line.prototype.render = function(color) {
 
     gl.disableVertexAttribArray(midgardProgram.aPos);
 };
+
+// "Destructor" - this has to be called manually
+Line.prototype.destroy = function() {
+    gl.deleteBuffer(this.vertices.bufferId);
+    delete this.vertices;
+};
