@@ -15,3 +15,15 @@ var pixelSize = 2*maxCoord/resolution;
 
 var markerRadius = 3*pixelSize;
 var lineThickness = 3*pixelSize;
+
+// Percentage of adjacent corners that need to be in water for the
+// cell to be water, too.
+var waterThreshold = 0.3;
+
+var circularIslandRadius = 0.9;
+
+var CellColor = {
+    Land: jQuery.Color('#94894B'),
+    Ocean: jQuery.Color('#384773'),
+    Lake: jQuery.Color('#4E77F2'),
+};

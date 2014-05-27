@@ -28,7 +28,8 @@ var configuration = {
     nPolygons: 256,
     seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
-    relaxationPasses: 1,
+    relaxationPasses: 2,
+    terrainShape: TerrainShape.Square,
     renderVoronoiCells: true,
     renderVoronoiEdges: true,
     renderDelaunayEdges: false,
@@ -128,6 +129,8 @@ function renderMenu()
 
                     'Point sampling method:<br>' +
                     '<select id="pointSamplingMethod"></select><br><br>' +
+                    'Terrain shape:<br>' +
+                    '<select id="terrainShape"></select><br><br>' +
 
                     'Show:<br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderVoronoiCells" checked> ' +
@@ -149,6 +152,16 @@ function renderMenu()
             );
     }
 
+    for (var shape in TerrainShape)
+    {
+        if (TerrainShape.hasOwnProperty(shape))
+            optionsBox.find('#terrainShape').append(
+                '<option value="' + shape + '">' +
+                shape.replace(/(?!^)(?=[A-Z])/g, ' ') +
+                '</option>'
+            );
+    }
+
     optionsBox.find('#nPolygons').bind('change', function(e) {
         configuration.nPolygons = +e.target.value;
     });
@@ -162,6 +175,10 @@ function renderMenu()
     optionsBox.find('#newTerrain').bind('click', generateNewTerrain);
     optionsBox.find('#pointSamplingMethod').bind('change', function(e){
         configuration.pointSamplingMethod = e.target.value;
+        generateNewTerrain();
+    });
+    optionsBox.find('#terrainShape').bind('change', function(e){
+        configuration.terrainShape = e.target.value;
         generateNewTerrain();
     });
 

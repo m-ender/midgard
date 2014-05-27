@@ -1,3 +1,10 @@
+var TerrainShape = {
+    Square: "Square",
+    Circular: "Circular",
+    PerlinIsland: "PerlinIsland",
+    PerlinWorld: "PerlinWorld",
+};
+
 function Terrain(configuration, pointGenerator)
 {
     // This bounding box is for the Voronoi library, which uses an
@@ -26,6 +33,8 @@ function Terrain(configuration, pointGenerator)
     this.relaxPoints();
 
     console.log(this.voronoiData);
+
+    this.assignTerrainShape();
 
     this.generatePointMarkers();
     this.generateVoronoiGraphics();
@@ -83,6 +92,61 @@ Terrain.prototype.relaxPoints = function() {
     }
 };
 
+Terrain.prototype.assignTerrainShape = function() {
+    var i, j, corner;
+
+    for (i = 0; i < this.voronoiData.vertices.length; ++i)
+    {
+        corner = this.voronoiData.vertices[i];
+        corner.water = !this.isLand(corner);
+    }
+
+    for (i = 0; i < this.voronoiData.cells.length; ++i)
+    {
+        var cell = this.voronoiData.cells[i];
+        var halfedges = cell.halfedges;
+
+        var nWaterVertices = 0;
+
+        var border = false;
+
+        for (j = halfedges.length - 1; j >= 0; --j)
+        {
+            edge = halfedges[j].edge;
+
+            if (!edge.rSite || !edge.lSite)
+            {
+                border = true;
+                break;
+            }
+
+            if (edge.rSite.voronoiId === i)
+                corner = edge.va;
+            else
+                corner = edge.vb;
+
+            if (corner.water)
+                nWaterVertices++;
+        }
+
+        cell.site.water = border || nWaterVertices >= halfedges.length * waterThreshold;
+    }
+};
+
+// p is a point object with 'x' and 'y' properties
+Terrain.prototype.isLand = function(p) {
+    switch (this.config.terrainShape)
+    {
+    case TerrainShape.Square:
+        return true;
+    case TerrainShape.Circular:
+        return sqrt(p.x*p.x + p.y*p.y) < circularIslandRadius;
+    case TerrainShape.PerlinIsland:
+    case TerrainShape.PerlinWorld:
+        return false;
+    }
+};
+
 Terrain.prototype.generatePointMarkers = function() {
     this.markers = [];
 
@@ -96,22 +160,27 @@ Terrain.prototype.generatePointMarkers = function() {
 Terrain.prototype.generateVoronoiGraphics = function() {
     var i, j, edge;
 
+    colorGenerator.reset();
+
     this.polygons = [];
 
-    for (i = 0; i < this.voronoiData.cells.length; ++i)
+    for (i = 0; i < this.points.length; ++i)
     {
-        var halfedges = this.voronoiData.cells[i].halfedges;
+        var voronoiId = this.points[i].voronoiId;
+        var halfedges = this.voronoiData.cells[voronoiId].halfedges;
         var points = [];
         for (j = halfedges.length - 1; j >= 0; --j)
         {
             edge = halfedges[j].edge;
-            if (edge.rSite && edge.rSite.voronoiId === i)
+            if (edge.rSite && edge.rSite.voronoiId === voronoiId)
                 points.push(edge.va);
             else
                 points.push(edge.vb);
         }
 
-        this.polygons.push(new ConvexPolygon(points, colorGenerator.next(true)));
+        //this.polygons.push(new ConvexPolygon(points, colorGenerator.next(true)));
+        var color = this.points[i].water ? CellColor.Ocean : CellColor.Land;
+        this.polygons.push(new ConvexPolygon(points, color));
     }
 
     this.voronoiLines = [];
