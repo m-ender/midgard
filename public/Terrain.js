@@ -1,6 +1,15 @@
 // n is the number of samples and hence polygons to use
 function Terrain(n, pointGenerator, configuration)
 {
+    // This bounding box is for the Voronoi library, which uses an
+    // origin in the upper-left corner.
+    // This means we need to flip the sign of the y-boundaries, and
+    // half-edges will rotate clockwise.
+    this.boundingBox = {
+        xl: -1, xr: 1,
+        yt: -1, yb: 1
+    };
+
     this.n = n;
 
     this.configuration = configuration;
@@ -40,19 +49,11 @@ Terrain.prototype.generatePoints = function() {
 };
 
 Terrain.prototype.generateVoronoiData = function() {
-    // The Voronoi library uses an origin in the upper-left corner.
-    // This means we need to flip the sign of the y-boundaries, and
-    // half-edges will rotate clockwise.
-    var boundingBox = {
-        xl: -1, xr: 1,
-        yt: -1, yb: 1
-    };
-
-    this.voronoiData = this.voronoi.compute(this.points, boundingBox);
+    this.voronoiData = this.voronoi.compute(this.points, this.boundingBox);
 };
 
 Terrain.prototype.generateVoronoiGraphics = function() {
-    var i, j;
+    var i, j, edge;
 
     this.polygons = [];
 
@@ -62,7 +63,7 @@ Terrain.prototype.generateVoronoiGraphics = function() {
         var points = [];
         for (j = halfedges.length - 1; j >= 0; --j)
         {
-            var edge = halfedges[j].edge;
+            edge = halfedges[j].edge;
             if (edge.rSite && edge.rSite.voronoiId === i)
                 points.push(edge.va);
             else
@@ -70,6 +71,17 @@ Terrain.prototype.generateVoronoiGraphics = function() {
         }
 
         this.polygons.push(new ConvexPolygon(points, colorGenerator.next()));
+    }
+
+    this.voronoiLines = [];
+
+    for (i = 0; i < this.voronoiData.edges.length; ++i)
+    {
+        edge = this.voronoiData.edges[i];
+        this.voronoiLines.push(new Line(
+            edge.va,
+            edge.vb
+        ));
     }
 };
 
@@ -97,9 +109,10 @@ Terrain.prototype.render = function() {
     if (this.configuration.renderVoronoiCells)
         for (i = 0; i < this.polygons.length; ++i)
             this.polygons[i].render();
+
     if (this.configuration.renderVoronoiEdges)
-        for (i = 0; i < this.polygons.length; ++i)
-            this.polygons[i].render(true);
+        for (i = 0; i < this.voronoiLines.length; ++i)
+            this.voronoiLines[i].render();
 
     if (this.configuration.renderDelaunayEdges)
         for (i = 0; i < this.delaunayLines.length; ++i)
