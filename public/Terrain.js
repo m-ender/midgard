@@ -34,6 +34,10 @@ function Terrain(configuration, pointGenerator)
 
     console.log(this.voronoiData);
 
+    this.extractGraph();
+
+    console.log(this.graph);
+
     this.assignTerrainShape();
 
     this.generatePointMarkers();
@@ -90,6 +94,94 @@ Terrain.prototype.relaxPoints = function() {
         this.voronoi.recycle(this.voronoiData);
         this.voronoiData = this.voronoi.compute(this.points, this.boundingBox);
     }
+};
+
+Terrain.prototype.extractGraph = function() {
+    var i, j, k, corner, edge, halfedge, cell;
+
+    graph = {
+        cells: [],
+        edges: [],
+        corners: [],
+    };
+
+    for (i = 0; i < this.voronoiData.vertices.length; ++i)
+    {
+        corner = this.voronoiData.vertices[i];
+
+        corner.border = (corner.x == this.boundingBox.xl ||
+                         corner.x == this.boundingBox.xr ||
+                         corner.y == this.boundingBox.yb ||
+                         corner.y == this.boundingBox.yt);
+
+        corner.edges = [];
+        corner.cells = [];
+
+        graph.corners.push(corner);
+    }
+
+    for (i = 0; i < this.voronoiData.edges.length; ++i)
+    {
+        edge = this.voronoiData.edges[i];
+
+        edge.va.edges.push(edge);
+        edge.vb.edges.push(edge);
+
+        edge.border = (edge.va.border && edge.vb.border);
+
+        // Reverse left and right to account for flipped y-axis.
+        var temp = edge.lSite;
+        edge.lSite = edge.rSite;
+        edge.rSite = temp;
+
+        graph.edges.push(edge);
+    }
+
+    for (i = 0; i < this.voronoiData.cells.length; ++i)
+    {
+        cell = this.voronoiData.cells[i];
+
+        cell.corners = [];
+
+        cell.border = false;
+
+        // Reverse half-edges to make them counter-clockwise in our
+        // coordinate frame
+        cell.halfedges = cell.halfedges.reverse();
+
+
+        // Add sorted va, vb to halfedge to avoid similar checks in
+        // future. Then add sorted va to corners of cell and
+        // vice-versa.
+        for (j = 0; j < cell.halfedges.length; ++j)
+        {
+            halfedge = cell.halfedges[j];
+            if (halfedge.edge.lSite && halfedge.edge.lSite.voronoiId === i)
+            {
+                halfedge.va = halfedge.edge.va;
+                halfedge.vb = halfedge.edge.vb;
+            }
+            else
+            {
+                halfedge.va = halfedge.edge.vb;
+                halfedge.vb = halfedge.edge.va;
+            }
+
+            cell.corners.push(halfedge.va);
+            halfedge.va.cells.push(cell);
+
+            halfedge.border = halfedge.edge.border;
+            cell.border = cell.border || halfedge.border;
+        }
+
+        // Copy relevant data from site
+        cell.x = cell.site.x;
+        cell.y = cell.site.y;
+
+        graph.cells.push(cell);
+    }
+
+    this.graph = graph;
 };
 
 Terrain.prototype.assignTerrainShape = function() {
