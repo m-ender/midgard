@@ -140,7 +140,7 @@ function renderMenu()
                     '<label for="renderVoronoiEdges">Voronoi cell boundaries</label></a><br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderDelaunayEdges"> ' +
                     '<label for="renderDelaunayEdges">Delaunay triangulation</label></a><br>' +
-                    '<a><input type="checkbox" class="renderSwitch" id="renderPointMarkers" checked> ' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderPointMarkers"> ' +
                     '<label for="renderPointMarkers">Sampled points</label></a>');
 
     for (var method in PointSamplingMethod)
