@@ -100,15 +100,16 @@ function init()
 
     prepareCircles();
 
-    generateNewSeed();
-    generateNewTerrain();
-
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     CheckError();
 
-    lastTime = Date.now();
-    update();
+    generateNewSeed();
+    generateNewTerrain();
+
+    drawScreen();
+    //lastTime = Date.now();
+    //update();
 }
 
 function renderInstructions()
@@ -198,6 +199,8 @@ function generateNewTerrain()
     var pointGenerator = new PointGenerator(configuration.pointSamplingMethod, configuration.seed);
 
     terrain = new Terrain(configuration, pointGenerator);
+
+    drawScreen();
 }
 
 function setRenderSwitches()
@@ -266,8 +269,7 @@ function InitShaders(gl, vertexShaderId, fragmentShaderId)
 // This is a fixed-framerate game loop. dT is not constant, though
 function update()
 {
-
-    window.requestAnimFrame(update, canvas);
+    // window.requestAnimFrame(update, canvas);
 
     currentTime = Date.now();
     var dTime = currentTime - lastTime;
