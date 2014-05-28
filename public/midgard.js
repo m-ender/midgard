@@ -30,7 +30,7 @@ var configuration = {
     pointSamplingMethod: PointSamplingMethod.Uniform,
     relaxationPasses: 2,
     terrainShape: TerrainShape.PerlinIsland,
-    renderVoronoiCells: true,
+    cellRenderMode: CellRenderMode.Classification,
     renderVoronoiEdges: true,
     renderDelaunayEdges: false,
     renderPointMarkers: false,
@@ -133,9 +133,9 @@ function renderMenu()
                     'Terrain shape:<br>' +
                     '<select id="terrainShape"></select><br><br>' +
 
-                    'Show:<br>' +
-                    '<a><input type="checkbox" class="renderSwitch" id="renderVoronoiCells" checked> ' +
-                    '<label for="renderVoronoiCells">Voronoi cells</label></a><br>' +
+                    'Rendering options<br><br>' +
+                    'Voronoi cells:<br>' +
+                    '<span id="cellRenderMode"></span><br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderVoronoiEdges" checked> ' +
                     '<label for="renderVoronoiEdges">Voronoi cell boundaries</label></a><br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderDelaunayEdges"> ' +
@@ -162,6 +162,18 @@ function renderMenu()
                 '</option>'
             );
     }
+
+    for (var mode in CellRenderMode)
+    {
+        if (CellRenderMode.hasOwnProperty(mode))
+            optionsBox.find('#cellRenderMode').append(
+                '<a><input type="radio" class="renderSwitch" id="' + mode + '" name="cellRenderMode" value="' + mode + '"' +
+                    (configuration.cellRenderMode === mode ? ' checked="checked"' : '') + '">' +
+                '<label for="' + mode + '">' + mode.replace(/(?!^)(?=[A-Z])/g, ' ') + '</label></a><br>'
+            );
+    }
+
+
 
     optionsBox.find('#nPolygons').bind('change', function(e) {
         configuration.nPolygons = +e.target.value;
@@ -205,7 +217,7 @@ function generateNewTerrain()
 
 function setRenderSwitches()
 {
-    configuration.renderVoronoiCells = optionsBox.find('#renderVoronoiCells')[0].checked;
+    configuration.cellRenderMode = optionsBox.find('input:radio[name="cellRenderMode"]:checked')[0].value;
     configuration.renderVoronoiEdges = optionsBox.find('#renderVoronoiEdges')[0].checked;
     configuration.renderDelaunayEdges = optionsBox.find('#renderDelaunayEdges')[0].checked;
     configuration.renderPointMarkers = optionsBox.find('#renderPointMarkers')[0].checked;

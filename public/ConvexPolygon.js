@@ -33,7 +33,9 @@ ConvexPolygon.prototype.show = function() { this.hidden = false; };
 
 // Outline can optionally be set to true to render ... well ...
 // only an outline.
-ConvexPolygon.prototype.render = function(outline) {
+// An optional color can overwrite the default (the color provided
+// in the constructor for solid rendering and black for outlines).
+ConvexPolygon.prototype.render = function(outline, color) {
     if (this.hidden) return;
 
     gl.useProgram(midgardProgram.program);
@@ -47,25 +49,23 @@ ConvexPolygon.prototype.render = function(outline) {
     gl.vertexAttribPointer(midgardProgram.aPos, 2, gl.FLOAT, false, 0, 0);
 
     if (outline)
-    {
-        gl.uniform4f(midgardProgram.uColor,
-                     0,
-                     0,
-                     0,
-                     1);
-
-        gl.drawArrays(gl.LINE_LOOP, 0, this.points.length);
-    }
+        color = color || 'black';
     else
-    {
-        gl.uniform4f(midgardProgram.uColor,
-                     this.color.red()/255,
-                     this.color.green()/255,
-                     this.color.blue()/255,
-                     1);
+        color = color || this.color;
 
+    if (!(color instanceof jQuery.Color))
+        color = jQuery.Color(color);
+
+    gl.uniform4f(midgardProgram.uColor,
+                 color.red()/255,
+                 color.green()/255,
+                 color.blue()/255,
+                 1);
+
+    if (outline)
+        gl.drawArrays(gl.LINE_LOOP, 0, this.points.length);
+    else
         gl.drawArrays(gl.TRIANGLE_FAN, 0, this.points.length);
-    }
 
     gl.disableVertexAttribArray(midgardProgram.aPos);
 };

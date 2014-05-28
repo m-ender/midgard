@@ -5,6 +5,15 @@ var TerrainShape = {
     PerlinWorld: "PerlinWorld",
 };
 
+var CellRenderMode = {
+    // Each cell gets a unique color
+    Identity: "Identity",
+    // Color based on ocean/lake/beach/land
+    Classification: "Classification",
+    // Don't render cells at all
+    Transparent: "Transparent",
+};
+
 function Terrain(configuration, pointGenerator)
 {
     // This bounding box is for the Voronoi library, which uses an
@@ -317,9 +326,10 @@ Terrain.prototype.generateVoronoiGraphics = function() {
         // Make a copy of the corners to act as the vertex list
         var points = cell.corners.slice();
 
-        //this.polygons.push(new ConvexPolygon(points, colorGenerator.next(true)));
-        var color = cell.water ? (cell.ocean ? CellColor.Ocean : CellColor.Lake) : CellColor.Land;
-        this.polygons.push(new ConvexPolygon(points, color));
+        var polygon = new ConvexPolygon(points, colorGenerator.next(true));
+        polygon.classificationColor = !cell.water ? CellColor.Land :
+                                      cell.ocean ? CellColor.Ocean : CellColor.Lake;
+        this.polygons.push(polygon);
     }
 
     this.voronoiLines = [];
@@ -354,10 +364,24 @@ Terrain.prototype.generateDelaunayGraphics = function() {
 
 Terrain.prototype.render = function() {
     var i;
+    var delaunayColor;
 
-    if (this.config.renderVoronoiCells)
+    switch (this.config.cellRenderMode)
+    {
+    case CellRenderMode.Identity:
+        delaunayColor = 'black';
         for (i = 0; i < this.polygons.length; ++i)
             this.polygons[i].render();
+        break;
+    case CellRenderMode.Classification:
+        delaunayColor = 'white';
+        for (i = 0; i < this.polygons.length; ++i)
+            this.polygons[i].render(false, this.polygons[i].classificationColor);
+        break;
+    case CellRenderMode.Transparent:
+        delaunayColor = 'black';
+        break;
+    }
 
     if (this.config.renderVoronoiEdges)
         for (i = 0; i < this.voronoiLines.length; ++i)
@@ -365,9 +389,7 @@ Terrain.prototype.render = function() {
 
     if (this.config.renderDelaunayEdges)
         for (i = 0; i < this.delaunayLines.length; ++i)
-            this.delaunayLines[i].render(
-                this.config.renderVoronoiCells ? 'white' : 'black'
-            );
+            this.delaunayLines[i].render(delaunayColor);
 
     if (this.config.renderPointMarkers)
         for (i = 0; i < this.markers.length; ++i)
