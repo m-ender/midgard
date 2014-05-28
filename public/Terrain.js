@@ -109,10 +109,10 @@ Terrain.prototype.extractGraph = function() {
     {
         corner = this.voronoiData.vertices[i];
 
-        corner.border = (corner.x == this.boundingBox.xl ||
-                         corner.x == this.boundingBox.xr ||
-                         corner.y == this.boundingBox.yb ||
-                         corner.y == this.boundingBox.yt);
+        corner.border = (abs(corner.x - this.boundingBox.xl) < Voronoi.ε ||
+                         abs(corner.x - this.boundingBox.xr) < Voronoi.ε ||
+                         abs(corner.y - this.boundingBox.yb) < Voronoi.ε ||
+                         abs(corner.y - this.boundingBox.yt) < Voronoi.ε);
 
         corner.edges = [];
         corner.cells = [];
