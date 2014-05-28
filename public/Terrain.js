@@ -24,6 +24,10 @@ function Terrain(configuration, pointGenerator)
 
     this.pointGenerator = pointGenerator;
 
+    // Set up RNG to be used by SimplexNoise
+    var rng = { random: new Math.seedrandom(configuration.seed) };
+    this.simplex = new SimplexNoise(rng);
+
     this.voronoi = new Voronoi();
 
     this.generatePoints();
@@ -218,6 +222,12 @@ Terrain.prototype.isLand = function(p) {
     case TerrainShape.Circular:
         return sqrt(p.x*p.x + p.y*p.y) < circularIslandRadius;
     case TerrainShape.PerlinIsland:
+        var terrainValue = 0.6 - sqrt(p.x*p.x + p.y*p.y);
+
+        // Do I even need more octaves here?
+        terrainValue += 0.5*this.simplex.noise(p.x*2, p.y*2);
+
+        return terrainValue > 0;
     case TerrainShape.PerlinWorld:
         return false;
     }

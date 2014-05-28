@@ -29,7 +29,7 @@ var configuration = {
     seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
     relaxationPasses: 2,
-    terrainShape: TerrainShape.Square,
+    terrainShape: TerrainShape.PerlinIsland,
     renderVoronoiCells: true,
     renderVoronoiEdges: true,
     renderDelaunayEdges: false,
@@ -157,7 +157,7 @@ function renderMenu()
     {
         if (TerrainShape.hasOwnProperty(shape))
             optionsBox.find('#terrainShape').append(
-                '<option value="' + shape + '">' +
+                '<option value="' + shape + '"' + (configuration.terrainShape === shape ? ' selected="selected"' : '') + '">' +
                 shape.replace(/(?!^)(?=[A-Z])/g, ' ') +
                 '</option>'
             );
@@ -209,6 +209,8 @@ function setRenderSwitches()
     configuration.renderVoronoiEdges = optionsBox.find('#renderVoronoiEdges')[0].checked;
     configuration.renderDelaunayEdges = optionsBox.find('#renderDelaunayEdges')[0].checked;
     configuration.renderPointMarkers = optionsBox.find('#renderPointMarkers')[0].checked;
+
+    drawScreen();
 }
 
 function InitShaders(gl, vertexShaderId, fragmentShaderId)
