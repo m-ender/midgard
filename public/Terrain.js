@@ -187,41 +187,25 @@ Terrain.prototype.extractGraph = function() {
 Terrain.prototype.assignTerrainShape = function() {
     var i, j, corner;
 
-    for (i = 0; i < this.voronoiData.vertices.length; ++i)
+    for (i = 0; i < this.graph.corners.length; ++i)
     {
-        corner = this.voronoiData.vertices[i];
+        corner = this.graph.corners[i];
         corner.water = !this.isLand(corner);
     }
 
-    for (i = 0; i < this.voronoiData.cells.length; ++i)
+    for (i = 0; i < this.graph.cells.length; ++i)
     {
-        var cell = this.voronoiData.cells[i];
-        var halfedges = cell.halfedges;
+        var cell = this.graph.cells[i];
 
-        var nWaterVertices = 0;
+        var nWaterCorners = 0;
 
         var border = false;
 
-        for (j = halfedges.length - 1; j >= 0; --j)
-        {
-            edge = halfedges[j].edge;
+        for (j = cell.corners.length - 1; j >= 0; --j)
+            if (cell.corners[j].water)
+                nWaterCorners++;
 
-            if (!edge.rSite || !edge.lSite)
-            {
-                border = true;
-                break;
-            }
-
-            if (edge.rSite.voronoiId === i)
-                corner = edge.va;
-            else
-                corner = edge.vb;
-
-            if (corner.water)
-                nWaterVertices++;
-        }
-
-        cell.site.water = border || nWaterVertices >= halfedges.length * waterThreshold;
+        cell.water = cell.border || nWaterCorners >= cell.corners.length * waterThreshold;
     }
 };
 
@@ -242,9 +226,9 @@ Terrain.prototype.isLand = function(p) {
 Terrain.prototype.generatePointMarkers = function() {
     this.markers = [];
 
-    for(i = 0; i < this.n; ++i)
+    for(i = 0; i < this.graph.cells.length; ++i)
     {
-        var p = this.points[i];
+        var p = this.graph.cells[i];
         this.markers.push(new Circle(p.x, p.y, 'black', markerRadius));
     }
 };
@@ -256,30 +240,23 @@ Terrain.prototype.generateVoronoiGraphics = function() {
 
     this.polygons = [];
 
-    for (i = 0; i < this.points.length; ++i)
+    for (i = 0; i < this.graph.cells.length; ++i)
     {
-        var voronoiId = this.points[i].voronoiId;
-        var halfedges = this.voronoiData.cells[voronoiId].halfedges;
-        var points = [];
-        for (j = halfedges.length - 1; j >= 0; --j)
-        {
-            edge = halfedges[j].edge;
-            if (edge.rSite && edge.rSite.voronoiId === voronoiId)
-                points.push(edge.va);
-            else
-                points.push(edge.vb);
-        }
+        var cell = this.graph.cells[i];
+
+        // Make a copy of the corners to act as the vertex list
+        var points = cell.corners.slice();
 
         //this.polygons.push(new ConvexPolygon(points, colorGenerator.next(true)));
-        var color = this.points[i].water ? CellColor.Ocean : CellColor.Land;
+        var color = cell.water ? CellColor.Ocean : CellColor.Land;
         this.polygons.push(new ConvexPolygon(points, color));
     }
 
     this.voronoiLines = [];
 
-    for (i = 0; i < this.voronoiData.edges.length; ++i)
+    for (i = 0; i < this.graph.edges.length; ++i)
     {
-        edge = this.voronoiData.edges[i];
+        edge = this.graph.edges[i];
         this.voronoiLines.push(new Line(
             edge.va,
             edge.vb
@@ -292,9 +269,9 @@ Terrain.prototype.generateDelaunayGraphics = function() {
 
     this.delaunayLines = [];
 
-    for (i = 0; i < this.voronoiData.edges.length; ++i)
+    for (i = 0; i < this.graph.edges.length; ++i)
     {
-        var edge = this.voronoiData.edges[i];
+        var edge = this.graph.edges[i];
         if (edge.lSite && edge.rSite)
             this.delaunayLines.push(new Line(
                 edge.lSite,
