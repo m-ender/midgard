@@ -14,16 +14,17 @@ var maxCoord = 1/renderScale;
 var pixelSize = 2*maxCoord/resolution;
 
 var markerRadius = 3*pixelSize;
-var lineThickness = 3*pixelSize;
+var lineThickness = 2*pixelSize;
 
 // Percentage of adjacent corners that need to be in water for the
 // cell to be water, too.
 var waterThreshold = 0.3;
 
 var circularIslandRadius = 0.9;
+var perlinWorldOctaves = 5;
 
 var CellColor = {
-    Land: jQuery.Color('#94894B'),
+    Land: jQuery.Color('#9E9A80'),
     Ocean: jQuery.Color('#384773'),
-    Lake: jQuery.Color('#4E77F2'),
+    Lake: jQuery.Color('#7491E8'),
 };

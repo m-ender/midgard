@@ -25,7 +25,7 @@ var polygons = [];
 var lines = [];
 
 var configuration = {
-    nPolygons: 256,
+    nPolygons: 1024,
     seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
     relaxationPasses: 2,
@@ -33,7 +33,7 @@ var configuration = {
     renderVoronoiCells: true,
     renderVoronoiEdges: true,
     renderDelaunayEdges: false,
-    renderPointMarkers: true,
+    renderPointMarkers: false,
 };
 
 var terrain;

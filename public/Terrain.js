@@ -105,6 +105,7 @@ Terrain.prototype.extractGraph = function() {
 
     graph = {
         cells: [],
+        bordercells: [],
         edges: [],
         corners: [],
     };
@@ -120,6 +121,7 @@ Terrain.prototype.extractGraph = function() {
 
         corner.edges = [];
         corner.cells = [];
+        corner.neighbors = [];
 
         graph.corners.push(corner);
     }
@@ -130,6 +132,9 @@ Terrain.prototype.extractGraph = function() {
 
         edge.va.edges.push(edge);
         edge.vb.edges.push(edge);
+
+        edge.va.neighbors.push(edge.vb);
+        edge.vb.neighbors.push(edge.va);
 
         edge.border = (edge.va.border && edge.vb.border);
 
@@ -146,6 +151,7 @@ Terrain.prototype.extractGraph = function() {
         cell = this.voronoiData.cells[i];
 
         cell.corners = [];
+        cell.neighbors = [];
 
         cell.border = false;
 
@@ -154,8 +160,8 @@ Terrain.prototype.extractGraph = function() {
         cell.halfedges = cell.halfedges.reverse();
 
 
-        // Add sorted va, vb to halfedge to avoid similar checks in
-        // future. Then add sorted va to corners of cell and
+        // Add sorted va, vb and neighbors to halfedge to avoid similar
+        // checks in future. Then add sorted va to corners of cell and
         // vice-versa.
         for (j = 0; j < cell.halfedges.length; ++j)
         {
@@ -164,11 +170,17 @@ Terrain.prototype.extractGraph = function() {
             {
                 halfedge.va = halfedge.edge.va;
                 halfedge.vb = halfedge.edge.vb;
+
+                if (halfedge.edge.rSite)
+                    cell.neighbors.push(this.voronoiData.cells[halfedge.edge.rSite.voronoiId]);
             }
             else
             {
                 halfedge.va = halfedge.edge.vb;
                 halfedge.vb = halfedge.edge.va;
+
+                if (halfedge.edge.lSite)
+                    cell.neighbors.push(this.voronoiData.cells[halfedge.edge.lSite.voronoiId]);
             }
 
             cell.corners.push(halfedge.va);
@@ -183,38 +195,73 @@ Terrain.prototype.extractGraph = function() {
         cell.y = cell.site.y;
 
         graph.cells.push(cell);
+
+        // Create a list of cells lying on the border for convenience
+        if (cell.border)
+            graph.bordercells.push(cell);
     }
 
     this.graph = graph;
 };
 
 Terrain.prototype.assignTerrainShape = function() {
-    var i, j, corner;
+    var i, j, corner, cell;
 
+    // Assign land or water to corners based on terrain function
     for (i = 0; i < this.graph.corners.length; ++i)
     {
         corner = this.graph.corners[i];
         corner.water = !this.isLand(corner);
     }
 
+    // Determine if cells are water or land. Border cells are
+    // always water, others are water if a certain percentage
+    // or adjacent corners are water.
     for (i = 0; i < this.graph.cells.length; ++i)
     {
-        var cell = this.graph.cells[i];
+        cell = this.graph.cells[i];
 
         var nWaterCorners = 0;
-
-        var border = false;
 
         for (j = cell.corners.length - 1; j >= 0; --j)
             if (cell.corners[j].water)
                 nWaterCorners++;
 
         cell.water = cell.border || nWaterCorners >= cell.corners.length * waterThreshold;
+        cell.ocean = false;
+    }
+
+    // Now flood fill the water cells from the border
+    var queue = [];
+
+    for (i = 0; i < this.graph.bordercells.length; ++i)
+    {
+        cell = this.graph.bordercells[i];
+        cell.checked = true;
+        queue.push(cell);
+    }
+
+    while (queue.length)
+    {
+        cell = queue.pop();
+        cell.ocean = true;
+
+        for (i = 0; i < cell.neighbors.length; ++i)
+        {
+            var neighbor = cell.neighbors[i];
+            if (!neighbor.checked && neighbor.water)
+            {
+                neighbor.checked = true;
+                queue.push(neighbor);
+            }
+        }
     }
 };
 
 // p is a point object with 'x' and 'y' properties
 Terrain.prototype.isLand = function(p) {
+    var terrainValue;
+
     switch (this.config.terrainShape)
     {
     case TerrainShape.Square:
@@ -222,14 +269,27 @@ Terrain.prototype.isLand = function(p) {
     case TerrainShape.Circular:
         return sqrt(p.x*p.x + p.y*p.y) < circularIslandRadius;
     case TerrainShape.PerlinIsland:
-        var terrainValue = 0.6 - sqrt(p.x*p.x + p.y*p.y);
+        terrainValue = 0.7 - sqrt(p.x*p.x + p.y*p.y);
 
         // Do I even need more octaves here?
-        terrainValue += 0.5*this.simplex.noise(p.x*2, p.y*2);
+        terrainValue += 0.7*this.simplex.noise(2*p.x, 2*p.y);
 
         return terrainValue > 0;
     case TerrainShape.PerlinWorld:
-        return false;
+        terrainValue = 0;
+
+        var amplitude = 1;
+        var frequency = 1;
+        var persistence = 0.7;
+
+        for (var i = 0; i < perlinWorldOctaves; ++i)
+        {
+            terrainValue += amplitude*this.simplex.noise(frequency*p.x, frequency*p.y);
+            frequency *= 2;
+            amplitude *= persistence;
+        }
+
+        return terrainValue > 0;
     }
 };
 
@@ -258,7 +318,7 @@ Terrain.prototype.generateVoronoiGraphics = function() {
         var points = cell.corners.slice();
 
         //this.polygons.push(new ConvexPolygon(points, colorGenerator.next(true)));
-        var color = cell.water ? CellColor.Ocean : CellColor.Land;
+        var color = cell.water ? (cell.ocean ? CellColor.Ocean : CellColor.Lake) : CellColor.Land;
         this.polygons.push(new ConvexPolygon(points, color));
     }
 
