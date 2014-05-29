@@ -214,7 +214,7 @@ Terrain.prototype.extractGraph = function() {
 };
 
 Terrain.prototype.assignTerrainShape = function() {
-    var i, j, corner, cell;
+    var i, j, corner, cell, neighbor;
 
     // Assign land or water to corners based on terrain function
     for (i = 0; i < this.graph.corners.length; ++i)
@@ -257,13 +257,58 @@ Terrain.prototype.assignTerrainShape = function() {
 
         for (i = 0; i < cell.neighbors.length; ++i)
         {
-            var neighbor = cell.neighbors[i];
+            neighbor = cell.neighbors[i];
             if (!neighbor.checked && neighbor.water)
             {
                 neighbor.checked = true;
                 queue.push(neighbor);
             }
         }
+    }
+
+    // Find coastal cells (ocean with land neighbour or vice-versa)
+    for (i = 0; i < this.graph.cells.length; ++i)
+    {
+        cell = this.graph.cells[i];
+
+        cell.coast = false;
+
+        for (j = 0; j < cell.neighbors.length; ++j)
+        {
+            neighbor = cell.neighbors[j];
+            if (neighbor.ocean && !cell.water ||
+                !neighbor.water && cell.ocean)
+            {
+                cell.coast = true;
+                break;
+            }
+        }
+    }
+
+    // Fix corners
+    for (i = 0; i < this.graph.corners.length; ++i)
+    {
+        corner = this.graph.corners[i];
+
+        var nOceanCells = 0;
+        var nLandCells = 0;
+        var nLakeCells = 0;
+
+        for (j = 0; j < corner.cells.length; ++j)
+        {
+            cell = corner.cells[j];
+
+            if (cell.ocean)
+                ++nOceanCells;
+            else if (cell.water)
+                ++nLakeCells;
+            else
+                ++nLandCells;
+        }
+
+        corner.coast = nLandCells > 0 && nOceanCells > 0;
+        corner.water = !corner.coast && (nOceanCells + nLakeCells > 0);
+        corner.ocean = corner.water && nOceanCells > 0;
     }
 };
 
@@ -327,8 +372,10 @@ Terrain.prototype.generateVoronoiGraphics = function() {
         var points = cell.corners.slice();
 
         var polygon = new ConvexPolygon(points, colorGenerator.next(true));
-        polygon.classificationColor = !cell.water ? CellColor.Land :
-                                      cell.ocean ? CellColor.Ocean : CellColor.Lake;
+        polygon.classificationColor = !cell.water ?
+                                        (cell.coast ? CellColor.Beach : CellColor.Land)
+                                      :
+                                        (cell.ocean ? CellColor.Ocean : CellColor.Lake);
         this.polygons.push(polygon);
     }
 

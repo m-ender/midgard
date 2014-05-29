@@ -25,6 +25,7 @@ var perlinWorldOctaves = 5;
 
 var CellColor = {
     Land: jQuery.Color('#9E9A80'),
-    Ocean: jQuery.Color('#384773'),
+    Beach: jQuery.Color('#DBCE81'), //('#E8D580'),
+    Ocean: jQuery.Color('#384773'), //('#1673C4'),
     Lake: jQuery.Color('#7491E8'),
 };
