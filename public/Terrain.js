@@ -461,7 +461,7 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                                       :
                                         (cell.ocean ? CellColor.Ocean : CellColor.Lake);
 
-        polygon.elevationColor = cell.water ?
+        polygon.elevationColor = (cell.water || cell.coast) ?
                                     polygon.classificationColor
                                  : jQuery.Color({
                                     hue: 100,
