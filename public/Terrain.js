@@ -10,6 +10,8 @@ var CellRenderMode = {
     Identity: "Identity",
     // Color based on ocean/lake/beach/land
     Classification: "Classification",
+    // Color based on ocean/lake/elevation,
+    Elevation: "Elevation",
     // Don't render cells at all
     Transparent: "Transparent",
 };
@@ -52,6 +54,8 @@ function Terrain(configuration, pointGenerator)
     console.log(this.graph);
 
     this.assignTerrainShape();
+
+    this.determineElevation();
 
     this.generatePointMarkers();
     this.generateVoronoiGraphics();
@@ -210,6 +214,22 @@ Terrain.prototype.extractGraph = function() {
             graph.bordercells.push(cell);
     }
 
+    // Remove detached corners
+    var properCorners = [];
+    for (i = 0; i < graph.corners.length; ++i)
+    {
+        corner = graph.corners[i];
+
+        if (corner.neighbors.length ||
+            corner.edges.length ||
+            corner.cells.length)
+        {
+            properCorners.push(corner);
+        }
+    }
+
+    graph.corners = properCorners;
+
     this.graph = graph;
 };
 
@@ -266,7 +286,7 @@ Terrain.prototype.assignTerrainShape = function() {
         }
     }
 
-    // Find coastal cells (ocean with land neighbour or vice-versa)
+    // Find coastal cells (ocean with land neighbor or vice-versa)
     for (i = 0; i < this.graph.cells.length; ++i)
     {
         cell = this.graph.cells[i];
@@ -347,6 +367,70 @@ Terrain.prototype.isLand = function(p) {
     }
 };
 
+Terrain.prototype.determineElevation = function() {
+    var i, j, corner, neihbor, cell, queue;
+
+
+    queue = [];
+
+    // Assign elevation as shortest distance from ocean, with
+    // lakes being basically flat.
+    for (i = 0; i < this.graph.corners.length; ++i)
+    {
+        corner = this.graph.corners[i];
+
+        corner.elevation = corner.border ? 0 : Infinity;
+
+        if (corner.border)
+            queue.push(corner);
+    }
+
+    while (queue.length)
+    {
+        corner = queue.shift();
+
+        for (j = 0; j < corner.neighbors.length; ++j)
+        {
+            neighbor = corner.neighbors[j];
+
+            var elevation = corner.elevation + 0.01;
+
+            if (!corner.water && !neighbor.water)
+                elevation += 1;
+
+            if (elevation < neighbor.elevation)
+            {
+                neighbor.elevation = elevation;
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    // Determine maximum peak
+    this.maxElevation = 0;
+
+    for (i = 0; i < this.graph.corners.length; ++i)
+    {
+        corner = this.graph.corners[i];
+
+        if (corner.elevation > this.maxElevation)
+            this.maxElevation = corner.elevation;
+    }
+
+    // Now set cell elevations to average of corners
+    for (i = 0; i < this.graph.cells.length; ++i)
+    {
+        cell = this.graph.cells[i];
+
+        cell.elevation = 0;
+
+        for (j = 0; j < cell.corners.length; ++j)
+            cell.elevation += cell.corners[j].elevation;
+
+        cell.elevation /= cell.corners.length;
+    }
+};
+
 Terrain.prototype.generatePointMarkers = function() {
     this.markers = [];
 
@@ -376,6 +460,16 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                                         (cell.coast ? CellColor.Beach : CellColor.Land)
                                       :
                                         (cell.ocean ? CellColor.Ocean : CellColor.Lake);
+
+        polygon.elevationColor = cell.water ?
+                                    polygon.classificationColor
+                                 : jQuery.Color({
+                                    hue: 100,
+                                    saturation: 0.5 - cell.elevation / this.maxElevation / 2,
+                                    lightness: 0.5 + cell.elevation / this.maxElevation / 2,
+                                    alpha: 1
+                                 });
+
         this.polygons.push(polygon);
     }
 
@@ -424,6 +518,11 @@ Terrain.prototype.render = function() {
         delaunayColor = 'white';
         for (i = 0; i < this.polygons.length; ++i)
             this.polygons[i].render(false, this.polygons[i].classificationColor);
+        break;
+    case CellRenderMode.Elevation:
+        delaunayColor = 'white';
+        for (i = 0; i < this.polygons.length; ++i)
+            this.polygons[i].render(false, this.polygons[i].elevationColor);
         break;
     case CellRenderMode.Transparent:
         delaunayColor = 'black';
