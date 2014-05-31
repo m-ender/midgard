@@ -373,13 +373,15 @@ Terrain.prototype.determineElevation = function() {
 
     queue = [];
 
-    // Assign elevation as shortest distance from ocean, with
-    // lakes being basically flat.
+    // Determine shortest distance from ocean, with
+    // lakes not counting. Assign elevation by adding
+    // the distance at each step (this should yield
+    // a quadratic distribution).
     for (i = 0; i < this.graph.corners.length; ++i)
     {
         corner = this.graph.corners[i];
 
-        corner.elevation = corner.border ? 0 : Infinity;
+        corner.elevation = corner.distance = corner.border ? 0 : Infinity;
 
         if (corner.border)
             queue.push(corner);
@@ -393,14 +395,15 @@ Terrain.prototype.determineElevation = function() {
         {
             neighbor = corner.neighbors[j];
 
-            var elevation = corner.elevation + 0.01;
+            var distance = corner.distance;
 
             if (!corner.water && !neighbor.water)
-                elevation += 1;
+                distance += 1;
 
-            if (elevation < neighbor.elevation)
+            if (distance < neighbor.distance)
             {
-                neighbor.elevation = elevation;
+                neighbor.distance = distance;
+                neighbor.elevation = corner.elevation + neighbor.distance + 0.01;
                 queue.push(neighbor);
             }
         }
