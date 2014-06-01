@@ -560,16 +560,24 @@ Terrain.prototype.determineMoisture = function() {
         }
     }
 
+    // Set coastal and ocean corners to maximum moisture
+    for (i = 0; i < this.graph.corners.length; ++i)
+    {
+        corner = this.graph.corners[i];
+        if (corner.ocean || corner.coast)
+            corner.moisture = 1;
+    }
+
     // Redistribute moisture to an even distribution between 0 and 1.
-    this.graph.landAndLakeCorners.sort(function(a, b) {
+    var nonOceanCorners = this.graph.landAndLakeCorners.concat(this.graph.coastCorners).sort(function(a, b) {
         if (a.moisture < b.moisture) return -1;
         else if (a.moisture > b.moisture) return 1;
         return 0;
     });
 
-    for (i = 0; i < this.graph.landAndLakeCorners.length; ++i)
+    for (i = 0; i < nonOceanCorners.length; ++i)
     {
-        this.graph.landAndLakeCorners[i].moisture = i / (this.graph.landAndLakeCorners.length-1);
+        nonOceanCorners[i].moisture = i / (nonOceanCorners.length-1);
     }
 
     this.maxMoisture = 1;
@@ -618,7 +626,7 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                                       :
                                         (cell.ocean ? CellColor.Ocean : CellColor.Lake);
 
-        polygon.elevationColor = (cell.water || cell.coast) ?
+        polygon.elevationColor = cell.water ?
                                     polygon.classificationColor
                                  : jQuery.Color({
                                     hue: 100,
@@ -627,7 +635,7 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                                     alpha: 1
                                  });
 
-        polygon.moistureColor = (cell.water || cell.coast) ?
+        polygon.moistureColor = cell.water ?
                                     polygon.classificationColor
                                  : jQuery.Color({
                                     hue: 60 + 100*cell.moisture,
