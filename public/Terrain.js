@@ -555,7 +555,7 @@ Terrain.prototype.generateDownslopeGraphics = function() {
 
         var length = sqrt(dx*dx + dy*dy) * 0.75;
 
-        this.downslopeArrows.push(ConvexPolygon.CreateArrow(length, length/2, corner, direction, '#153AB3'));
+        this.downslopeArrows.push(ConvexPolygon.CreateArrow(length, length/2, corner, direction, CellColor.River));
     }
 };
 

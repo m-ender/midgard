@@ -30,7 +30,7 @@ var configuration = {
     pointSamplingMethod: PointSamplingMethod.Uniform,
     relaxationPasses: 2,
     terrainShape: TerrainShape.PerlinIsland,
-    cellRenderMode: CellRenderMode.Classification,
+    cellRenderMode: CellRenderMode.Elevation,
     renderVoronoiEdges: true,
     renderDelaunayEdges: false,
     renderPointMarkers: false,

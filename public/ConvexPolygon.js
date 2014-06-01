@@ -35,8 +35,9 @@ function ConvexPolygon(points, color)
 // Origin is where the arrow starts (not where it points to).
 // Direction is an arbitrary 2D vector (does not need to be
 // normalised).
-// For now, this just creates isosceles triangles with the origin
-// being the centre of the base and the tip being the vertex.
+// The arrow is not actually a convex polygon, but is rendered correctly
+// by the ConvexPolygon class anyway, because the tip of the arrow is
+// listed first.
 ConvexPolygon.CreateArrow = function(length, width, origin, direction, color)
 {
     // Get normalised direction
@@ -48,19 +49,35 @@ ConvexPolygon.CreateArrow = function(length, width, origin, direction, color)
     var nx = -dy;
     var ny = dx;
 
-    // Set up vertices
+    // Set up vertices. Note that the tip has to be listed first.
     var vertices = [
-        {
-            x: origin.x + nx * width/2,
-            y: origin.y + ny * width/2
-        },
-        {
-            x: origin.x + -nx * width/2,
-            y: origin.y + -ny * width/2
-        },
         {
             x: origin.x + dx * length,
             y: origin.y + dy * length
+        },
+        {
+            x: origin.x + dx * length/2 + nx * width/2,
+            y: origin.y + dy * length/2 + ny * width/2
+        },
+        {
+            x: origin.x + dx * length/2 + nx * width/4,
+            y: origin.y + dy * length/2 + ny * width/4
+        },
+        {
+            x: origin.x + nx * width/4,
+            y: origin.y + ny * width/4
+        },
+        {
+            x: origin.x - nx * width/4,
+            y: origin.y - ny * width/4
+        },
+        {
+            x: origin.x + dx * length/2 - nx * width/4,
+            y: origin.y + dy * length/2 - ny * width/4
+        },
+        {
+            x: origin.x + dx * length/2 - nx * width/2,
+            y: origin.y + dy * length/2 - ny * width/2
         },
     ];
 
