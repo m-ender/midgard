@@ -34,6 +34,7 @@ var configuration = {
     renderVoronoiEdges: true,
     renderDelaunayEdges: false,
     renderPointMarkers: false,
+    renderDownslopes: false,
 };
 
 var terrain;
@@ -141,7 +142,9 @@ function renderMenu()
                     '<a><input type="checkbox" class="renderSwitch" id="renderDelaunayEdges"> ' +
                     '<label for="renderDelaunayEdges">Delaunay triangulation</label></a><br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderPointMarkers"> ' +
-                    '<label for="renderPointMarkers">Sampled points</label></a>');
+                    '<label for="renderPointMarkers">Sampled points</label></a><br>' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderDownslopes"> ' +
+                    '<label for="renderDownslopes">Downslopes</label></a>');
 
     for (var method in PointSamplingMethod)
     {
@@ -221,6 +224,7 @@ function setRenderSwitches()
     configuration.renderVoronoiEdges = optionsBox.find('#renderVoronoiEdges')[0].checked;
     configuration.renderDelaunayEdges = optionsBox.find('#renderDelaunayEdges')[0].checked;
     configuration.renderPointMarkers = optionsBox.find('#renderPointMarkers')[0].checked;
+    configuration.renderDownslopes = optionsBox.find('#renderDownslopes')[0].checked;
 
     drawScreen();
 }

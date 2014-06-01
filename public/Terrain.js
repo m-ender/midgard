@@ -60,6 +60,7 @@ function Terrain(configuration, pointGenerator)
     this.generatePointMarkers();
     this.generateVoronoiGraphics();
     this.generateDelaunayGraphics();
+    this.generateDownslopeGraphics();
 }
 
 Terrain.prototype.generatePoints = function() {
@@ -409,7 +410,7 @@ Terrain.prototype.determineElevation = function() {
         {
             neighbor = corner.neighbors[j];
 
-            var distance = corner.distance;
+            var distance = corner.distance + 0.01;
 
             if (!corner.water && !neighbor.water)
                 distance += 1;
@@ -445,6 +446,26 @@ Terrain.prototype.determineElevation = function() {
             cell.elevation += cell.corners[j].elevation;
 
         cell.elevation /= cell.corners.length;
+    }
+
+    // Determine downslopes on land and lake corners
+    for (i = 0; i < this.graph.landAndLakeCorners.length; ++i)
+    {
+        corner = this.graph.landAndLakeCorners[i];
+
+        var maximumDescent = 0;
+
+        for (j = 0; j < corner.neighbors.length; ++j)
+        {
+            neighbor = corner.neighbors[j];
+
+            var descent = corner.elevation - neighbor.elevation;
+            if (descent > maximumDescent)
+            {
+                maximumDescent = descent;
+                corner.downslope = neighbor;
+            }
+        }
     }
 };
 
@@ -520,6 +541,24 @@ Terrain.prototype.generateDelaunayGraphics = function() {
     }
 };
 
+Terrain.prototype.generateDownslopeGraphics = function() {
+    this.downslopeArrows = [];
+
+    for(i = 0; i < this.graph.landAndLakeCorners.length; ++i)
+    {
+        var corner = this.graph.landAndLakeCorners[i];
+
+        var dx = corner.downslope.x - corner.x;
+        var dy = corner.downslope.y - corner.y;
+
+        var direction = { x: dx, y: dy };
+
+        var length = sqrt(dx*dx + dy*dy) * 0.75;
+
+        this.downslopeArrows.push(ConvexPolygon.CreateArrow(length, length/2, corner, direction, '#153AB3'));
+    }
+};
+
 Terrain.prototype.render = function() {
     var i;
     var delaunayColor;
@@ -557,6 +596,13 @@ Terrain.prototype.render = function() {
     if (this.config.renderPointMarkers)
         for (i = 0; i < this.markers.length; ++i)
             this.markers[i].render();
+
+    if (this.config.renderDownslopes)
+        for (i = 0; i < this.downslopeArrows.length; ++i)
+        {
+            this.downslopeArrows[i].render();
+            this.downslopeArrows[i].render(true);
+        }
 };
 
 Terrain.prototype.destroy = function() {
