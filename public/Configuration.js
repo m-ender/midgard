@@ -20,6 +20,16 @@ var lineThickness = 2*pixelSize;
 // cell to be water, too.
 var waterThreshold = 0.3;
 
+// Minimum and maximum elevation required for spring placement
+// (relative to global maximum elevation)
+var minSpringElevation = 0.3;
+var maxSpringElevation = 0.9;
+
+// Roughly how many springs should be placed for a given map size
+var springsPerPolygon = 0.01;
+
+var moistureAttenuation = 0.9;
+
 var circularIslandRadius = 0.9;
 var perlinWorldOctaves = 5;
 

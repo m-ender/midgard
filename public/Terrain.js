@@ -12,6 +12,8 @@ var CellRenderMode = {
     Classification: "Classification",
     // Color based on ocean/lake/elevation,
     Elevation: "Elevation",
+    // Color based on ocean/lake/moisture,
+    Moisture: "Moisture",
     // Don't render cells at all
     Transparent: "Transparent",
 };
@@ -42,9 +44,7 @@ function Terrain(configuration, pointGenerator)
     this.voronoi = new Voronoi();
 
     this.generatePoints();
-
     this.generateVoronoiData();
-
     this.relaxPoints();
 
     console.log(this.voronoiData);
@@ -54,10 +54,9 @@ function Terrain(configuration, pointGenerator)
     console.log(this.graph);
 
     this.assignTerrainShape();
-
     this.determineElevation();
-
     this.generateRivers();
+    this.determineMoisture();
 
     this.generatePointMarkers();
     this.generateVoronoiGraphics();
@@ -493,15 +492,20 @@ Terrain.prototype.generateRivers = function() {
     for (i = 0; i < this.graph.edges.length; ++i)
         this.graph.edges[i].river = 0;
 
-    var nRivers = floor(this.n / 100);
+    var nSprings = floor(this.n * springsPerPolygon);
 
-    while (nRivers)
+    j = 1000*nSprings;
+    while (nSprings)
     {
+        // Guard for small maps that don't have enough corner to
+        // place the required number of springs.
+        if (j-- === 0) break;
+
         i = floor(this.rand() * this.graph.landCorners.length);
         corner = this.graph.landCorners[i];
 
-        if (corner.elevation < 0.3*this.maxElevation ||
-            corner.elevation > 0.9*this.maxElevation ||
+        if (corner.elevation < minSpringElevation*this.maxElevation ||
+            corner.elevation > maxSpringElevation*this.maxElevation ||
             corner.river)
             continue;
 
@@ -514,7 +518,73 @@ Terrain.prototype.generateRivers = function() {
 
         corner.river += 1;
 
-        --nRivers;
+        --nSprings;
+    }
+};
+
+Terrain.prototype.determineMoisture = function() {
+    var i, j, corner, neighbor, cell, queue;
+
+    queue = [];
+
+    for (i = 0; i < this.graph.corners.length; ++i)
+    {
+        corner = this.graph.corners[i];
+
+        if ((corner.water || corner.river) && !corner.ocean)
+        {
+            corner.moisture = corner.river ? Math.min(3, 2 * corner.river) : 1;
+            queue.push(corner);
+        }
+        else
+        {
+            corner.moisture = 0;
+        }
+    }
+
+    while (queue.length)
+    {
+        corner = queue.shift();
+
+        var newMoisture = corner.moisture * moistureAttenuation;
+
+        for (j = 0; j < corner.neighbors.length; ++j)
+        {
+            neighbor = corner.neighbors[j];
+
+            if (newMoisture > neighbor.moisture)
+            {
+                neighbor.moisture = newMoisture;
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    // Redistribute moisture to an even distribution between 0 and 1.
+    this.graph.landAndLakeCorners.sort(function(a, b) {
+        if (a.moisture < b.moisture) return -1;
+        else if (a.moisture > b.moisture) return 1;
+        return 0;
+    });
+
+    for (i = 0; i < this.graph.landAndLakeCorners.length; ++i)
+    {
+        this.graph.landAndLakeCorners[i].moisture = i / (this.graph.landAndLakeCorners.length-1);
+    }
+
+    this.maxMoisture = 1;
+
+    // Now set cell moisture to average of corners
+    for (i = 0; i < this.graph.cells.length; ++i)
+    {
+        cell = this.graph.cells[i];
+
+        cell.moisture = 0;
+
+        for (j = 0; j < cell.corners.length; ++j)
+            cell.moisture += cell.corners[j].moisture;
+
+        cell.moisture /= cell.corners.length;
     }
 };
 
@@ -554,6 +624,15 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                                     hue: 100,
                                     saturation: 0.5 - cell.elevation / this.maxElevation / 3,
                                     lightness: 0.4 + cell.elevation / this.maxElevation * 0.6,
+                                    alpha: 1
+                                 });
+
+        polygon.moistureColor = (cell.water || cell.coast) ?
+                                    polygon.classificationColor
+                                 : jQuery.Color({
+                                    hue: 60 + 100*cell.moisture,
+                                    saturation: 1/3,
+                                    lightness: 0.5,
                                     alpha: 1
                                  });
 
@@ -647,6 +726,11 @@ Terrain.prototype.render = function() {
         delaunayColor = 'white';
         for (i = 0; i < this.polygons.length; ++i)
             this.polygons[i].render(false, this.polygons[i].elevationColor);
+        break;
+    case CellRenderMode.Moisture:
+        delaunayColor = 'white';
+        for (i = 0; i < this.polygons.length; ++i)
+            this.polygons[i].render(false, this.polygons[i].moistureColor);
         break;
     case CellRenderMode.Transparent:
         delaunayColor = 'black';
