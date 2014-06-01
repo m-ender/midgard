@@ -468,8 +468,8 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                                     polygon.classificationColor
                                  : jQuery.Color({
                                     hue: 100,
-                                    saturation: 0.5 - cell.elevation / this.maxElevation / 2,
-                                    lightness: 0.5 + cell.elevation / this.maxElevation / 2,
+                                    saturation: 0.5 - cell.elevation / this.maxElevation / 3,
+                                    lightness: 0.4 + cell.elevation / this.maxElevation * 0.6,
                                     alpha: 1
                                  });
 
