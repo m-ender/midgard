@@ -28,6 +28,45 @@ function ConvexPolygon(points, color)
     gl.bufferData(gl.ARRAY_BUFFER, this.vertices.data, gl.STATIC_DRAW);
 }
 
+// Convenience constructor for arrows (i.e. this returns a new
+// ConvexPolygon, with vertices set up as necessary).
+// Length is the distance from start to tip of the arrow.
+// Width is measured at the widest part of the arrow.
+// Origin is where the arrow starts (not where it points to).
+// Direction is an arbitrary 2D vector (does not need to be
+// normalised).
+// For now, this just creates isosceles triangles with the origin
+// being the centre of the base and the tip being the vertex.
+ConvexPolygon.CreateArrow = function(length, width, origin, direction, color)
+{
+    // Get normalised direction
+    var d = sqrt(direction.x*direction.x + direction.y*direction.y);
+    var dx = direction.x / d;
+    var dy = direction.y / d;
+
+    // Get normal perpendicular to direction
+    var nx = -dy;
+    var ny = dx;
+
+    // Set up vertices
+    var vertices = [
+        {
+            x: origin.x + nx * width/2,
+            y: origin.y + ny * width/2
+        },
+        {
+            x: origin.x + -nx * width/2,
+            y: origin.y + -ny * width/2
+        },
+        {
+            x: origin.x + dx * length,
+            y: origin.y + dy * length
+        },
+    ];
+
+    return new ConvexPolygon(vertices, color);
+};
+
 ConvexPolygon.prototype.hide = function() { this.hidden = true; };
 ConvexPolygon.prototype.show = function() { this.hidden = false; };
 
