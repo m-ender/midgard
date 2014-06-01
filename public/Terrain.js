@@ -403,7 +403,7 @@ Terrain.prototype.determineElevation = function() {
             if (distance < neighbor.distance)
             {
                 neighbor.distance = distance;
-                neighbor.elevation = corner.elevation + neighbor.distance + 0.01;
+                neighbor.elevation = distance*distance;
                 queue.push(neighbor);
             }
         }
