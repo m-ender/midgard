@@ -57,10 +57,13 @@ function Terrain(configuration, pointGenerator)
 
     this.determineElevation();
 
+    this.generateRivers();
+
     this.generatePointMarkers();
     this.generateVoronoiGraphics();
     this.generateDelaunayGraphics();
     this.generateDownslopeGraphics();
+    this.generateRiverGraphics();
 }
 
 Terrain.prototype.generatePoints = function() {
@@ -383,7 +386,7 @@ Terrain.prototype.isLand = function(p) {
 };
 
 Terrain.prototype.determineElevation = function() {
-    var i, j, corner, neihbor, cell, queue;
+    var i, j, corner, neihbor, cell, edge, queue;
 
 
     queue = [];
@@ -466,6 +469,52 @@ Terrain.prototype.determineElevation = function() {
                 corner.downslope = neighbor;
             }
         }
+
+        for (j = 0; j < corner.edges.length; ++j)
+        {
+            edge = corner.edges[j];
+
+            if (edge.va === corner.downslope ||
+                edge.vb === corner.downslope)
+            {
+                corner.downslopeEdge = edge;
+                break;
+            }
+        }
+    }
+};
+
+Terrain.prototype.generateRivers = function() {
+    var i, j, edge, corner;
+
+    for (i = 0; i < this.graph.corners.length; ++i)
+        this.graph.corners[i].river = 0;
+
+    for (i = 0; i < this.graph.edges.length; ++i)
+        this.graph.edges[i].river = 0;
+
+    var nRivers = floor(this.n / 100);
+
+    while (nRivers)
+    {
+        i = floor(this.rand() * this.graph.landCorners.length);
+        corner = this.graph.landCorners[i];
+
+        if (corner.elevation < 0.3*this.maxElevation ||
+            corner.elevation > 0.9*this.maxElevation ||
+            corner.river)
+            continue;
+
+        do
+        {
+            corner.river += 1;
+            corner.downslopeEdge.river += 1;
+            corner = corner.downslope;
+        } while (!corner.coast);
+
+        corner.river += 1;
+
+        --nRivers;
     }
 };
 
@@ -544,7 +593,7 @@ Terrain.prototype.generateDelaunayGraphics = function() {
 Terrain.prototype.generateDownslopeGraphics = function() {
     this.downslopeArrows = [];
 
-    for(i = 0; i < this.graph.landAndLakeCorners.length; ++i)
+    for (i = 0; i < this.graph.landAndLakeCorners.length; ++i)
     {
         var corner = this.graph.landAndLakeCorners[i];
 
@@ -556,6 +605,25 @@ Terrain.prototype.generateDownslopeGraphics = function() {
         var length = sqrt(dx*dx + dy*dy) * 0.75;
 
         this.downslopeArrows.push(ConvexPolygon.CreateArrow(length, length/2, corner, direction, CellColor.River));
+    }
+};
+
+Terrain.prototype.generateRiverGraphics = function() {
+    this.riverLines = [];
+
+    for (i = 0; i < this.graph.edges.length; ++i)
+    {
+        var edge = this.graph.edges[i];
+        if ((!edge.va.water || !edge.vb.water) &&
+            edge.river)
+        {
+            this.riverLines.push(new Line(
+                edge.va,
+                edge.vb,
+                CellColor.River,
+                sqrt(edge.river) * pixelSize
+            ));
+        }
     }
 };
 
@@ -596,6 +664,10 @@ Terrain.prototype.render = function() {
     if (this.config.renderPointMarkers)
         for (i = 0; i < this.markers.length; ++i)
             this.markers[i].render();
+
+    if (this.config.renderRivers)
+        for (i = 0; i < this.riverLines.length; ++i)
+            this.riverLines[i].render();
 
     if (this.config.renderDownslopes)
         for (i = 0; i < this.downslopeArrows.length; ++i)

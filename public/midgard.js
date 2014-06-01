@@ -25,16 +25,17 @@ var polygons = [];
 var lines = [];
 
 var configuration = {
-    nPolygons: 1024,
+    nPolygons: 2048,
     seed: 0,
     pointSamplingMethod: PointSamplingMethod.Uniform,
     relaxationPasses: 2,
     terrainShape: TerrainShape.PerlinIsland,
     cellRenderMode: CellRenderMode.Elevation,
-    renderVoronoiEdges: true,
+    renderVoronoiEdges: false,
     renderDelaunayEdges: false,
     renderPointMarkers: false,
     renderDownslopes: false,
+    renderRivers: true,
 };
 
 var terrain;
@@ -137,14 +138,16 @@ function renderMenu()
                     'Rendering options<br><br>' +
                     'Voronoi cells:<br>' +
                     '<span id="cellRenderMode"></span><br>' +
-                    '<a><input type="checkbox" class="renderSwitch" id="renderVoronoiEdges" checked> ' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderVoronoiEdges"> ' +
                     '<label for="renderVoronoiEdges">Voronoi cell boundaries</label></a><br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderDelaunayEdges"> ' +
                     '<label for="renderDelaunayEdges">Delaunay triangulation</label></a><br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderPointMarkers"> ' +
                     '<label for="renderPointMarkers">Sampled points</label></a><br>' +
                     '<a><input type="checkbox" class="renderSwitch" id="renderDownslopes"> ' +
-                    '<label for="renderDownslopes">Downslopes</label></a>');
+                    '<label for="renderDownslopes">Downslopes</label></a><br>' +
+                    '<a><input type="checkbox" class="renderSwitch" id="renderRivers" checked> ' +
+                    '<label for="renderRivers">Rivers</label></a>');
 
     for (var method in PointSamplingMethod)
     {
@@ -225,6 +228,7 @@ function setRenderSwitches()
     configuration.renderDelaunayEdges = optionsBox.find('#renderDelaunayEdges')[0].checked;
     configuration.renderPointMarkers = optionsBox.find('#renderPointMarkers')[0].checked;
     configuration.renderDownslopes = optionsBox.find('#renderDownslopes')[0].checked;
+    configuration.renderRivers = optionsBox.find('#renderRivers')[0].checked;
 
     drawScreen();
 }
