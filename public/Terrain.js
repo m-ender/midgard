@@ -305,7 +305,14 @@ Terrain.prototype.assignTerrainShape = function() {
         }
     }
 
-    // Fix corners
+    // Fix corners and add lists of specific corner types for
+    // convenience
+    this.graph.landCorners = [];
+    this.graph.landAndLakeCorners = [];
+    this.graph.lakeCorners = [];
+    this.graph.oceanCorners = [];
+    this.graph.waterCorners = [];
+    this.graph.coastCorners = [];
     for (i = 0; i < this.graph.corners.length; ++i)
     {
         corner = this.graph.corners[i];
@@ -329,6 +336,13 @@ Terrain.prototype.assignTerrainShape = function() {
         corner.coast = nLandCells > 0 && nOceanCells > 0;
         corner.water = !corner.coast && (nOceanCells + nLakeCells > 0);
         corner.ocean = corner.water && nOceanCells > 0;
+
+        if (!corner.water && !corner.coast) this.graph.landCorners.push(corner);
+        if (!corner.ocean && !corner.coast) this.graph.landAndLakeCorners.push(corner);
+        if (!corner.ocean &&  corner.water) this.graph.lakeCorners.push(corner);
+        if (corner.ocean) this.graph.oceanCorners.push(corner);
+        if (corner.water) this.graph.waterCorners.push(corner);
+        if (corner.coast) this.graph.coastCorners.push(corner);
     }
 };
 
