@@ -10,10 +10,12 @@ var CellRenderMode = {
     Identity: "Identity",
     // Color based on ocean/lake/beach/land
     Classification: "Classification",
-    // Color based on ocean/lake/elevation,
+    // Land color based on elevation
     Elevation: "Elevation",
-    // Color based on ocean/lake/moisture,
+    // Land color based on moisture
     Moisture: "Moisture",
+    // Land color based on temperature
+    Temperature: "Temperature",
     // Don't render cells at all
     Transparent: "Transparent",
 };
@@ -57,6 +59,7 @@ function Terrain(configuration, pointGenerator)
     this.determineElevation();
     this.generateRivers();
     this.determineMoisture();
+    this.determineTemperature();
 
     this.generatePointMarkers();
     this.generateVoronoiGraphics();
@@ -596,6 +599,37 @@ Terrain.prototype.determineMoisture = function() {
     }
 };
 
+Terrain.prototype.determineTemperature = function() {
+    var i, j, corner, cell;
+
+    // Set temperature based on altitude
+    // Potential other factors: latitude, moderate temperature
+    // near the ocean.
+    for (i = 0; i < this.graph.corners.length; ++i)
+    {
+        corner = this.graph.corners[i];
+        corner.temperature = (corner.ocean || corner.coast) ?
+                                20
+                             :
+                                50 - sqrt(corner.elevation / this.maxElevation) * 80;
+    }
+
+    this.maxTemperature = 50;
+
+    // Now set cell temperature to average of corners
+    for (i = 0; i < this.graph.cells.length; ++i)
+    {
+        cell = this.graph.cells[i];
+
+        cell.temperature = 0;
+
+        for (j = 0; j < cell.corners.length; ++j)
+            cell.temperature += cell.corners[j].temperature;
+
+        cell.temperature /= cell.corners.length;
+    }
+};
+
 Terrain.prototype.generatePointMarkers = function() {
     this.markers = [];
 
@@ -640,6 +674,15 @@ Terrain.prototype.generateVoronoiGraphics = function() {
                                  : jQuery.Color({
                                     hue: 60 + 100*cell.moisture,
                                     saturation: 1/3,
+                                    lightness: 0.5,
+                                    alpha: 1
+                                 });
+
+        polygon.temperatureColor = cell.water ?
+                                    polygon.classificationColor
+                                 : jQuery.Color({
+                                    hue: 240 - (cell.temperature + 30) * 3,
+                                    saturation: 0.5,
                                     lightness: 0.5,
                                     alpha: 1
                                  });
@@ -739,6 +782,11 @@ Terrain.prototype.render = function() {
         delaunayColor = 'white';
         for (i = 0; i < this.polygons.length; ++i)
             this.polygons[i].render(false, this.polygons[i].moistureColor);
+        break;
+    case CellRenderMode.Temperature:
+        delaunayColor = 'white';
+        for (i = 0; i < this.polygons.length; ++i)
+            this.polygons[i].render(false, this.polygons[i].temperatureColor);
         break;
     case CellRenderMode.Transparent:
         delaunayColor = 'black';
